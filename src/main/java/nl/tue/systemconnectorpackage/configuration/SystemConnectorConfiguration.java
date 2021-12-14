@@ -7,9 +7,11 @@ import nl.tue.systemconnectorpackage.clients.maas.MAASClient;
 import nl.tue.systemconnectorpackage.clients.maas.implementations.*;
 import nl.tue.systemconnectorpackage.clients.services.systemInformation.SystemInformationService;
 import nl.tue.systemconnectorpackage.clients.utilities.arrowhead.implementations.ArrowheadSeperatePackageImp;
+import nl.tue.systemconnectorpackage.common.FileUtilityService;
 import nl.tue.systemconnectorpackage.common.HttpUtilityService;
 import nl.tue.systemconnectorpackage.common.StringUtilities;
 import nl.tue.systemconnectorpackage.common.exceptions.InvalidParameterException;
+import nl.tue.systemconnectorpackage.common.implementations.FileUtilityServiceDefaultImp;
 import nl.tue.systemconnectorpackage.common.implementations.HttpUtilityServiceDefaultImp;
 import nl.tue.systemconnectorpackage.clients.utilities.arrowhead.ArrowheadHelper;
 
@@ -37,14 +39,14 @@ public class SystemConnectorConfiguration {
 
     @Bean
     public ArrowheadHelper arrowheadHelper(@Autowired ArrowheadService arrowheadService,
+            @Autowired FileUtilityService fileUtilityService,
             @Autowired HttpService httpService, @Autowired ApplicationContext context)
             throws InvalidParameterException {
         if (StringUtilities.isValid(customArrowheadImpBeanName) && context.containsBean(customArrowheadImpBeanName)
                 && context.getBean(customArrowheadImpBeanName) instanceof ArrowheadHelper) {
             return (ArrowheadHelper) context.getBean(customArrowheadImpBeanName);
         }
-
-        return new ArrowheadSeperatePackageImp(arrowheadService, httpService);
+        return new ArrowheadSeperatePackageImp(arrowheadService, fileUtilityService, httpService);
     }
 
     @Bean
@@ -70,5 +72,10 @@ public class SystemConnectorConfiguration {
     @Bean
     public HttpUtilityService httpUtilityService() {
         return new HttpUtilityServiceDefaultImp();
+    }
+
+    @Bean
+    public FileUtilityService fileUtilityService() {
+        return new FileUtilityServiceDefaultImp();
     }
 }

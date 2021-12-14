@@ -1,8 +1,6 @@
 package nl.tue.systemconnectorpackage.clients.utilities.arrowhead.implementations;
 
-import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
@@ -22,7 +20,6 @@ import nl.tue.systemconnectorpackage.clients.utilities.arrowhead.models.Authoriz
 
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -42,17 +39,17 @@ import eu.arrowhead.common.dto.shared.SystemRequestDTO;
 import eu.arrowhead.common.dto.shared.SystemResponseDTO;
 import eu.arrowhead.common.exception.UnavailableServerException;
 import eu.arrowhead.common.http.HttpService;
-import nl.tue.systemconnectorpackage.common.JsonUtilities;
+import nl.tue.systemconnectorpackage.common.FileUtilityService;
 import nl.tue.systemconnectorpackage.common.StringUtilities;
 import nl.tue.systemconnectorpackage.common.exceptions.InvalidParameterException;
 import nl.tue.systemconnectorpackage.common.exceptions.UnexpectedException;
 
+// TO-DO If the registrations wasn't done here, we should load it from Arrowhead!
+/**
+ * Abstract base class that provides some functionalities for ArrowheadHelper
+ * implementations
+ */
 public abstract class ArrowheadHelperImpBase {
-    // TO-DO: It should be taken from application.properties
-    protected boolean tokenSecurityFilterEnabled = false;
-    // TO-DO: It should be taken from application.properties
-    protected boolean sslEnabled = false;
-
     @Value("${arrowhead_authorization_address:localhost}")
     protected String authorizationAddress;
     @Value("${arrowhead_authorization_port:8445}")
@@ -61,6 +58,10 @@ public abstract class ArrowheadHelperImpBase {
     protected String serviceRegistryAddress;
     @Value("${arrowhead_serviceregistry_port:8443}")
     protected Integer serviceRegistryPort;
+    @Value("${token.security.filter.enabled:false}")
+    protected boolean tokenSecurityFilterEnabled;
+    @Value("${server.ssl.enabled:false}")
+    protected boolean sslEnabled;
 
     protected static final List<ArrowheadSystemInformation> connectedSystemsLocalRepository = new ArrayList<>();
 
@@ -68,17 +69,25 @@ public abstract class ArrowheadHelperImpBase {
     protected HttpService httpService;
     protected Logger logger;
 
-    protected ArrowheadHelperImpBase(ArrowheadService arrowheadService, HttpService httpService, Logger logger) {
-        validateConstructionParameters(arrowheadService, httpService, logger);
+    private FileUtilityService fileUtilityService;
+
+    protected ArrowheadHelperImpBase(ArrowheadService arrowheadService, FileUtilityService fileUtilityService,
+            HttpService httpService, Logger logger) {
+        validateConstructionParameters(arrowheadService, fileUtilityService, httpService, logger);
         this.arrowheadService = arrowheadService;
+        this.fileUtilityService = fileUtilityService;
         this.httpService = httpService;
         this.logger = logger;
     }
 
-    private void validateConstructionParameters(final ArrowheadService arrowheadService, final HttpService httpService,
+    private void validateConstructionParameters(final ArrowheadService arrowheadService,
+            final FileUtilityService fileUtilityService,
+            final HttpService httpService,
             Logger logger) throws InvalidParameterException {
         if (arrowheadService == null)
             throw new InvalidParameterException("arrowheadService cannot be null!");
+        if (fileUtilityService == null)
+            throw new InvalidParameterException("fileUtilityService cannot be null!");
         if (httpService == null)
             throw new InvalidParameterException("httpService cannot be null!");
         if (logger == null)
@@ -90,15 +99,11 @@ public abstract class ArrowheadHelperImpBase {
         if (!StringUtilities.isValid(systemDefinitionListResourcePath))
             throw new InvalidParameterException("systemDefinitionListResourcePath is not valid!");
 
-        try {
-            checkCoreSystemAvailabilities();
+        checkCoreSystemAvailabilities();
 
-            loadSystemInformationListFromResource(systemDefinitionListResourcePath);
-            registerProviders(getProviders(connectedSystemsLocalRepository));
-            registerConsumers(getConsumers(connectedSystemsLocalRepository));
-        } catch (Exception e) {
-            logger.error("Error occurred: ", e);
-        }
+        loadSystemInformationListFromResourceToLocalRepository(systemDefinitionListResourcePath);
+        registerProviders();
+        registerConsumers(getConsumersFromLocalRepo());
     }
 
     private void checkCoreSystemAvailabilities() {
@@ -108,44 +113,33 @@ public abstract class ArrowheadHelperImpBase {
         if (!arrowheadService.echoCoreSystem(CoreSystem.AUTHORIZATION))
             throw new UnavailableServerException("CoreSystem.AUTHORIZATION is not available!");
         arrowheadService.updateCoreServiceURIs(CoreSystem.AUTHORIZATION);
-        if (sslEnabled && tokenSecurityFilterEnabled) {
-            // setTokenSecurityFilter();
-        } else {
-            // logger.info("TokenSecurityFilter in not active");
-        }
 
         if (!arrowheadService.echoCoreSystem(CoreSystem.ORCHESTRATOR))
             throw new UnavailableServerException("CoreSystem.ORCHESTRATOR is not available!");
         arrowheadService.updateCoreServiceURIs(CoreSystem.ORCHESTRATOR);
     }
 
-    private void loadSystemInformationListFromResource(final String systemDefinitionListResourcePath)
+    private void loadSystemInformationListFromResourceToLocalRepository(final String systemDefinitionListResourcePath)
             throws IOException, JsonSyntaxException {
-        File resource = new ClassPathResource(systemDefinitionListResourcePath).getFile();
-        String jsonStringOfSystemsToConnect = new String(Files.readAllBytes(resource.toPath()));
-        List<ArrowheadSystemInformation> systemsToConnect = JsonUtilities
-                .convertFromJsonString(new TypeToken<List<ArrowheadSystemInformation>>() {
-                }, jsonStringOfSystemsToConnect);
+        List<ArrowheadSystemInformation> systemsToConnect = fileUtilityService
+                .loadJsonFile(new TypeToken<List<ArrowheadSystemInformation>>() {
+                }, systemDefinitionListResourcePath);
         if (systemsToConnect == null)
             throw new UnexpectedException("Failed to load systems to connect from source!");
 
         connectedSystemsLocalRepository.addAll(systemsToConnect);
     }
 
-    private static List<ArrowheadSystemInformation> getProviders(
-            final List<ArrowheadSystemInformation> arrowheadSystemInformationList) {
-        return arrowheadSystemInformationList
-                .stream()
-                .filter(si -> !si.getProducedServices().isEmpty())
-                .collect(Collectors.toList());
+    private void registerProviders() {
+        for (ArrowheadSystemInformation provider : getProvidersFromLocalRepo())
+            registerProviderAndSetItsDetailsInLocalRepository(provider);
     }
 
-    private void registerProviders(final List<ArrowheadSystemInformation> providers) {
-        for (ArrowheadSystemInformation provider : providers) {
-            if (provider == null)
-                continue;
-            registerProviderAndSetItsDetailsInLocalRepository(provider);
-        }
+    private static List<ArrowheadSystemInformation> getProvidersFromLocalRepo() {
+        return connectedSystemsLocalRepository
+                .stream()
+                .filter(system -> system != null && !system.getProducedServices().isEmpty())
+                .collect(Collectors.toList());
     }
 
     private void registerProviderAndSetItsDetailsInLocalRepository(final ArrowheadSystemInformation provider) {
@@ -206,11 +200,10 @@ public abstract class ArrowheadHelperImpBase {
         serviceToSetDetails.setProviderId(response.getProvider().getId());
     }
 
-    private static List<ArrowheadSystemInformation> getConsumers(
-            final List<ArrowheadSystemInformation> arrowheadSystemInformationList) {
-        return arrowheadSystemInformationList
+    private static List<ArrowheadSystemInformation> getConsumersFromLocalRepo() {
+        return connectedSystemsLocalRepository
                 .stream()
-                .filter(si -> !si.getConsumedServiceNames().isEmpty())
+                .filter(system -> system != null && !system.getConsumedServiceNames().isEmpty())
                 .collect(Collectors.toList());
     }
 

@@ -1,0 +1,9 @@
+[
+  {
+    "systemName": "mock-consumer",
+    "address": "127.0.0.1",
+    "port": 8081,
+    "producedServices": [],
+    "consumedServicesNames": ["say-n-times-hi"]
+  }
+]

@@ -1,6 +1,7 @@
 package nl.tue.systemconnectorpackage.common;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonSyntaxException;
 import com.google.gson.reflect.TypeToken;
 
 import nl.tue.systemconnectorpackage.common.exceptions.InvalidParameterException;
@@ -32,7 +33,8 @@ public class JsonUtilities {
      * @param jsonString String which represents a JSON value
      * @return Java object of JSON value representation
      */
-    public static <T> T convertFromJsonString(TypeToken<T> typeTokenOfConvertedObject, String jsonString) {
+    public static <T> T convertFromJsonString(TypeToken<T> typeTokenOfConvertedObject, String jsonString)
+            throws JsonSyntaxException {
         if (jsonString == null)
             return null;
         if (typeTokenOfConvertedObject == null)

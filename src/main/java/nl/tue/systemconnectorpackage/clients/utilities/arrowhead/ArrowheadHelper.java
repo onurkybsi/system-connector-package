@@ -13,14 +13,15 @@ import com.google.gson.JsonSyntaxException;
 import org.springframework.http.HttpMethod;
 
 /**
- * Contains utility functions to communicate with Arrowhead
+ * Provides various functionalities to communicate with Arrowhead
  */
 public interface ArrowheadHelper {
         /**
          * Loads JSON file by the given resource path and registers the systems to
          * Arrowhead by the information in the file
          *
-         * @param systemDefinitionListResourcePath JSON file path for system definitions
+         * @param systemDefinitionListResourcePath JSON file resource path for system
+         *                                         definitions
          * @see "/resources/system-definitions/example-system-definitions.json"
          */
         void registerSystemsToArrowhead(String systemDefinitionListResourcePath)

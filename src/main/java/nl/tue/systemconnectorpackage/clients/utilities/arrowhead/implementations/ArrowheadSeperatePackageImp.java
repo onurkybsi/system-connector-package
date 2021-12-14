@@ -20,12 +20,15 @@ import nl.tue.systemconnectorpackage.clients.utilities.arrowhead.exceptions.Arro
 import nl.tue.systemconnectorpackage.clients.utilities.arrowhead.models.ArrowheadServiceInformation;
 import nl.tue.systemconnectorpackage.clients.utilities.arrowhead.models.ArrowheadSystemInformation;
 import nl.tue.systemconnectorpackage.clients.utilities.arrowhead.models.ServiceRegistryListResponseDTO;
+import nl.tue.systemconnectorpackage.common.FileUtilityService;
 import nl.tue.systemconnectorpackage.common.exceptions.InvalidParameterException;
 
 public class ArrowheadSeperatePackageImp extends ArrowheadHelperImpBase
         implements ArrowheadHelper, SystemInformationService {
-    public ArrowheadSeperatePackageImp(ArrowheadService arrowheadService, HttpService httpService) {
-        super(arrowheadService, httpService, LogManager.getLogger(ArrowheadSeperatePackageImp.class));
+    public ArrowheadSeperatePackageImp(ArrowheadService arrowheadService, FileUtilityService fileUtilityService,
+            HttpService httpService) {
+        super(arrowheadService, fileUtilityService, httpService,
+                LogManager.getLogger(ArrowheadSeperatePackageImp.class));
     }
 
     @Override
@@ -42,7 +45,7 @@ public class ArrowheadSeperatePackageImp extends ArrowheadHelperImpBase
 
         for (ArrowheadSystemInformation consumer : consumers) {
             setLocalRepoByRegisteredConsumer(consumer, sendSystemRegistrationRequest(consumer));
-            
+
             List<ArrowheadServiceInformation> consumedServices = filterConsumedServicesFomServiceRegistryList(
                     consumer.getConsumedServiceNames(), allServiceRegistriesInArrowhead);
 
