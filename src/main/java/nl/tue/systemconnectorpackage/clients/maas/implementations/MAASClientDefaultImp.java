@@ -1,5 +1,6 @@
 package nl.tue.systemconnectorpackage.clients.maas.implementations;
 
+import nl.tue.systemconnectorpackage.common.StringUtilities;
 import nl.tue.systemconnectorpackage.common.ValidationUtilities;
 import nl.tue.systemconnectorpackage.common.exceptions.InvalidParameterException;
 import nl.tue.systemconnectorpackage.clients.utilities.arrowhead.ArrowheadHelper;
@@ -34,8 +35,9 @@ public class MAASClientDefaultImp implements MAASClient {
             ModelCrawlerClient modelCrawlerClient, String systemDefinitionListResourcePath)
             throws UnavailableServerException, JsonSyntaxException, IOException {
         if (ValidationUtilities.containsNull(arrowheadHelper, repositoryManagerClient, modelFilterClient,
-                modelTransformerClient, modelCrawlerClient))
-            throw new InvalidParameterException();
+                modelTransformerClient, modelCrawlerClient)
+                || !StringUtilities.isValid(systemDefinitionListResourcePath))
+            throw new InvalidParameterException("MAASClientDefaultImp parameters are not valid!");
         this.repositoryManagerClient = repositoryManagerClient;
         this.modelFilterClient = modelFilterClient;
         this.modelTransformerClient = modelTransformerClient;
