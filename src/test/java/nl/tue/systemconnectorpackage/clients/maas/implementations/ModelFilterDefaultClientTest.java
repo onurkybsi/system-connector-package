@@ -23,7 +23,7 @@ public class ModelFilterDefaultClientTest {
     }
 
     @Test
-    public void transformModel_Proceed_Orchestration_Via_ArrowheadHelper() {
+    public void filterModel_Proceed_Orchestration_Via_ArrowheadHelper() {
         // Arrange
         ArgumentCaptor<String> argumentCaptor = ArgumentCaptor.forClass(String.class);
         ArrowheadHelper mockArrowheadHelper = Mockito.mock(ArrowheadHelper.class);
@@ -62,7 +62,7 @@ public class ModelFilterDefaultClientTest {
     }
 
     @Test
-    public void transformModel_Validate_Orchestration_Result_Via_ArrowheadHelper() {
+    public void filterModel_Validate_Orchestration_Result_Via_ArrowheadHelper() {
         // Arrange
         ArgumentCaptor<OrchestrationResponseDTO> argumentCaptor = ArgumentCaptor
                 .forClass(OrchestrationResponseDTO.class);
