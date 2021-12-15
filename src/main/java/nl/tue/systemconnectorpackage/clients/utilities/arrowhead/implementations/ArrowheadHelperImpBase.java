@@ -63,7 +63,7 @@ public abstract class ArrowheadHelperImpBase {
     @Value("${server.ssl.enabled:false}")
     protected boolean sslEnabled;
 
-    protected static final List<ArrowheadSystemInformation> connectedSystemsLocalRepository = new ArrayList<>();
+    private final List<ArrowheadSystemInformation> connectedSystemsLocalRepository = new ArrayList<>();
 
     protected ArrowheadService arrowheadService;
     protected HttpService httpService;
@@ -135,7 +135,7 @@ public abstract class ArrowheadHelperImpBase {
             registerProviderAndSetItsDetailsInLocalRepository(provider);
     }
 
-    private static List<ArrowheadSystemInformation> getProvidersFromLocalRepo() {
+    private List<ArrowheadSystemInformation> getProvidersFromLocalRepo() {
         return connectedSystemsLocalRepository
                 .stream()
                 .filter(system -> system != null && !system.getProducedServices().isEmpty())
@@ -200,7 +200,7 @@ public abstract class ArrowheadHelperImpBase {
         serviceToSetDetails.setProviderId(response.getProvider().getId());
     }
 
-    private static List<ArrowheadSystemInformation> getConsumersFromLocalRepo() {
+    private List<ArrowheadSystemInformation> getConsumersFromLocalRepo() {
         return connectedSystemsLocalRepository
                 .stream()
                 .filter(system -> system != null && !system.getConsumedServiceNames().isEmpty())

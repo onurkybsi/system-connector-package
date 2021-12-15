@@ -11,7 +11,7 @@ public class SystemInformation {
     private String systemName;
 
     public SystemInformation(String systemName) {
-        if (StringUtilities.isValid(systemName))
+        if (!StringUtilities.isValid(systemName))
             throw new InvalidParameterException("systemName is not valid!");
         this.systemName = systemName;
     }
