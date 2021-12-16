@@ -1,5 +1,6 @@
 package nl.tue.systemconnectorpackage.clients.maas.implementations;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -9,9 +10,14 @@ import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.ArgumentMatchers;
 import org.mockito.Mockito;
+import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.web.multipart.MultipartFile;
 
 import eu.arrowhead.common.dto.shared.OrchestrationResponseDTO;
 import eu.arrowhead.common.dto.shared.OrchestrationResultDTO;
+import eu.arrowhead.common.dto.shared.SystemResponseDTO;
+import nl.tue.systemconnectorpackage.clients.maas.models.Domain;
 import nl.tue.systemconnectorpackage.clients.utilities.arrowhead.ArrowheadHelper;
 import nl.tue.systemconnectorpackage.common.HttpUtilityService;
 import nl.tue.systemconnectorpackage.common.exceptions.InvalidParameterException;
@@ -100,33 +106,114 @@ public class RepositoryManagerClientDefaultImpTest {
                 Assertions.assertThat(actualInput).isEqualTo(expectedOrchestrationResponse);
         }
 
-        // TO-DO: Fix this
+        // @Test
+        // public void
+        // getDomains_Consumes_Http_Service_With_By_OrchestrationResult_Via_ArrowheadHelper()
+        // {
+        // // Arrange
+        // ArrowheadHelper mockArrowheadHelper = Mockito.mock(ArrowheadHelper.class);
+        // OrchestrationResponseDTO expectedOrchestrationResponse =
+        // createValidOrchestrationResponseDTO();
+        // Mockito.when(mockArrowheadHelper.proceedOrchestration("get-domains"))
+        // .thenReturn(expectedOrchestrationResponse);
+        // HttpUtilityService mockHttpUtilityService =
+        // Mockito.mock(HttpUtilityService.class);
+        // RepositoryManagerClientDefaultImp client = new
+        // RepositoryManagerClientDefaultImp(mockArrowheadHelper,
+        // mockHttpUtilityService);
+        // // Act
+        // client.getDomains("name", 1, 1);
+        // // Assert
+        // ArgumentCaptor<OrchestrationResultDTO> argumentCaptor = ArgumentCaptor
+        // .forClass(OrchestrationResultDTO.class);
+        // Mockito.verify(mockArrowheadHelper, Mockito.times(1))
+        // .consumeServiceHTTPByOrchestrationResult(
+        // argumentCaptor.capture(),
+        // ArgumentMatchers.eq(HashMap.class),
+        // ArgumentMatchers.eq(null),
+        // ArgumentMatchers.eq(new String[] { "name", "name", "offset", "1",
+        // "limit", "1" }));
+        // OrchestrationResultDTO actualInput = argumentCaptor.getValue();
+        // Assertions.assertThat(actualInput).isEqualTo(expectedOrchestrationResponse.getResponse().get(0));
+        // }
+
         @Test
         public void getDomains_Consumes_Http_Service_With_Name_Offset_Limit_Parameters_By_OrchestrationResult_Via_ArrowheadHelper() {
-                // // Arrange
-                // ArrowheadHelper mockArrowheadHelper = Mockito.mock(ArrowheadHelper.class);
-                // OrchestrationResponseDTO expectedOrchestrationResponse =
-                // createValidOrchestrationResponseDTO();
-                // Mockito.when(mockArrowheadHelper.proceedOrchestration("get-domains"))
-                // .thenReturn(expectedOrchestrationResponse);
-                // ArgumentCaptor<String[]> argumentCaptor = ArgumentCaptor
-                // .forClass(String[].class);
-                // Mockito.doReturn(new HashMap<String, Object>()).when(mockArrowheadHelper)
-                // .consumeServiceHTTPByOrchestrationResult(
-                // ArgumentMatchers.any(OrchestrationResultDTO.class),
-                // ArgumentMatchers.any(Class.class), ArgumentMatchers.any(Object.class),
-                // argumentCaptor.capture());
-                // HttpUtilityService mockHttpUtilityService =
-                // Mockito.mock(HttpUtilityService.class);
-                // RepositoryManagerClientDefaultImp client = new
-                // RepositoryManagerClientDefaultImp(mockArrowheadHelper,
-                // mockHttpUtilityService);
-                // // Act
-                // client.getDomains("name", 1, 1);
-                // // Assert
-                // String[] actualInput = argumentCaptor.getValue();
-                // Assertions.assertThat(actualInput).containsAll(getGetDomainsServiceDefaultMetadata().values());
+                // Arrange
+                ArrowheadHelper mockArrowheadHelper = Mockito.mock(ArrowheadHelper.class);
+                OrchestrationResponseDTO expectedOrchestrationResponse = createValidOrchestrationResponseDTO();
+                Mockito.when(mockArrowheadHelper.proceedOrchestration("get-domains"))
+                                .thenReturn(expectedOrchestrationResponse);
+                HttpUtilityService mockHttpUtilityService = Mockito.mock(HttpUtilityService.class);
+                RepositoryManagerClientDefaultImp client = new RepositoryManagerClientDefaultImp(mockArrowheadHelper,
+                                mockHttpUtilityService);
+                // Act
+                client.getDomains("name", 1, 1);
+                // Assert
+                ArgumentCaptor<String> argumentCaptor = ArgumentCaptor
+                                .forClass(String.class);
+                Mockito.verify(mockArrowheadHelper, Mockito.times(1))
+                                .consumeServiceHTTPByOrchestrationResult(
+                                                Mockito.eq(expectedOrchestrationResponse.getResponse().get(0)),
+                                                Mockito.eq(HashMap.class), Mockito.eq(null),
+                                                argumentCaptor.capture());
+                List<String> actualInput = argumentCaptor.getAllValues();
+                Assertions.assertThat(actualInput).containsAll(getGetDomainsServiceDefaultMetadata().values());
         }
 
-        // TO-DO: There are 3 test to write, which is similar to above
+        @Test
+        public void createDomain_Proceed_Orchestration_Via_ArrowheadHelper() throws IOException {
+                // Arrange
+                ArgumentCaptor<String> argumentCaptor = ArgumentCaptor.forClass(String.class);
+                ArrowheadHelper mockArrowheadHelper = Mockito.mock(ArrowheadHelper.class);
+                Mockito.when(mockArrowheadHelper.getInterfaceName()).thenReturn("INSECURE");
+                OrchestrationResultDTO mockOrchestrationResult = new OrchestrationResultDTO();
+                mockOrchestrationResult.setMetadata(new HashMap<>());
+                mockOrchestrationResult.setProvider(new SystemResponseDTO());
+                Mockito.doReturn(createValidOrchestrationResponseDTO(mockOrchestrationResult)).when(mockArrowheadHelper)
+                                .proceedOrchestration(argumentCaptor.capture());
+                HttpUtilityService mockHttpUtilityService = Mockito.mock(HttpUtilityService.class);
+                RepositoryManagerClientDefaultImp client = new RepositoryManagerClientDefaultImp(mockArrowheadHelper,
+                                mockHttpUtilityService);
+                // Act
+                client.createDomain(new Domain(), new MockMultipartFile(
+                                "file",
+                                "hello.txt",
+                                MediaType.TEXT_PLAIN_VALUE,
+                                "Hello, World!".getBytes()));
+                // Assert
+                String actualInput = argumentCaptor.getValue();
+                Assertions.assertThat(actualInput).isEqualTo("create-domain");
+        }
+
+        @Test
+        public void createDomain_Validate_Orchestration_Result_Via_ArrowheadHelper() throws IOException {
+                // Arrange
+                ArgumentCaptor<OrchestrationResponseDTO> argumentCaptor = ArgumentCaptor
+                                .forClass(OrchestrationResponseDTO.class);
+                ArrowheadHelper mockArrowheadHelper = Mockito.mock(ArrowheadHelper.class);
+                Mockito.when(mockArrowheadHelper.getInterfaceName()).thenReturn("INSECURE");
+
+                OrchestrationResultDTO mockOrchestrationResult = new OrchestrationResultDTO();
+                mockOrchestrationResult.setMetadata(new HashMap<>());
+                mockOrchestrationResult.setProvider(new SystemResponseDTO());
+                OrchestrationResponseDTO expectedOrchestrationResponse = createValidOrchestrationResponseDTO(mockOrchestrationResult);
+                Mockito.when(mockArrowheadHelper.proceedOrchestration("create-domain"))
+                                .thenReturn(expectedOrchestrationResponse);
+                Mockito.doNothing().when(mockArrowheadHelper)
+                                .validateOrchestrationResponse(argumentCaptor.capture());
+                HttpUtilityService mockHttpUtilityService = Mockito.mock(HttpUtilityService.class);
+                RepositoryManagerClientDefaultImp client = new RepositoryManagerClientDefaultImp(mockArrowheadHelper,
+                                mockHttpUtilityService);
+                // Act
+                client.createDomain(new Domain(), new MockMultipartFile(
+                                "file",
+                                "hello.txt",
+                                MediaType.TEXT_PLAIN_VALUE,
+                                "Hello, World!".getBytes()));
+                // Assert
+                OrchestrationResponseDTO actualInput = argumentCaptor.getValue();
+                Assertions.assertThat(actualInput).isEqualTo(expectedOrchestrationResponse);
+        }
+
 }
