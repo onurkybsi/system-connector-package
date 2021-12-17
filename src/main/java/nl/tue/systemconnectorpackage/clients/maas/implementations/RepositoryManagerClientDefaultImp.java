@@ -67,13 +67,8 @@ public class RepositoryManagerClientDefaultImp implements RepositoryManagerClien
         arrowheadHelper.validateOrchestrationResponse(orchestrationResponse);
 
         final OrchestrationResultDTO orchestrationResult = orchestrationResponse.getResponse().get(0);
-        final String token = arrowheadHelper
-                .extractAuthorizationTokenFromOrchestrationResult(orchestrationResult); /*
-                                                                                         * TO-DO: Add to
-                                                                                         * request!
-                                                                                         */
         return sendHttpRequestToCreateRepositoryManagerEntity(orchestrationResult, data, dataFileName, file,
-                token);
+                arrowheadHelper.extractAuthorizationTokenFromOrchestrationResult(orchestrationResult));
     }
 
     private <T> HashMap<String, Object> sendHttpRequestToCreateRepositoryManagerEntity(
@@ -114,15 +109,15 @@ public class RepositoryManagerClientDefaultImp implements RepositoryManagerClien
         arrowheadHelper.validateOrchestrationResponse(orchestrationResponse);
 
         final OrchestrationResultDTO orchestrationResult = orchestrationResponse.getResponse().get(0);
-        final String token = arrowheadHelper
-                .extractAuthorizationTokenFromOrchestrationResult(orchestrationResult);
 
         return arrowheadHelper.consumeServiceHTTP(Domain.class,
                 HttpMethod.valueOf(orchestrationResult.getMetadata().get("http-method")),
                 orchestrationResult.getProvider().getAddress(),
                 orchestrationResult.getProvider().getPort(),
                 String.format("%s/%s", orchestrationResult.getServiceUri(), id),
-                arrowheadHelper.getInterfaceName(), token, newDomain, (String[]) null);
+                arrowheadHelper.getInterfaceName(), arrowheadHelper
+                        .extractAuthorizationTokenFromOrchestrationResult(orchestrationResult),
+                newDomain, (String[]) null);
     }
 
     @Override
