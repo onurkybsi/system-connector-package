@@ -5,15 +5,23 @@ import java.util.HashMap;
 
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
+import org.mockito.Mock;
 import org.mockito.Mockito;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import eu.arrowhead.common.dto.shared.OrchestrationResponseDTO;
 import eu.arrowhead.common.dto.shared.OrchestrationResultDTO;
+import nl.tue.systemconnectorpackage.clients.maas.models.TransformationListDTO;
 import nl.tue.systemconnectorpackage.clients.utilities.arrowhead.ArrowheadHelper;
 import nl.tue.systemconnectorpackage.common.exceptions.InvalidParameterException;
 
+@ExtendWith(MockitoExtension.class)
 public class ModelFilterDefaultClientTest {
+    @Mock
+    private ArrowheadHelper mockArrowheadHelper;
+
     @Test
     public void ModelFilterDefaultClient_Throws_InvalidParameterException_If_Given_ArrowheadHelper_Parameter_Is_Null() {
         // Arrange, Act and Assert
@@ -25,17 +33,22 @@ public class ModelFilterDefaultClientTest {
     @Test
     public void filterModel_Proceed_Orchestration_Via_ArrowheadHelper() {
         // Arrange
-        ArgumentCaptor<String> argumentCaptor = ArgumentCaptor.forClass(String.class);
-        ArrowheadHelper mockArrowheadHelper = Mockito.mock(ArrowheadHelper.class);
         OrchestrationResultDTO mockOrchestrationResult = new OrchestrationResultDTO();
         mockOrchestrationResult.setMetadata(new HashMap<>());
-        Mockito.doReturn(createValidOrchestrationResponseDTO(mockOrchestrationResult)).when(mockArrowheadHelper)
-                .proceedOrchestration(argumentCaptor.capture());
+        Mockito.when(mockArrowheadHelper.proceedOrchestration(Mockito.any()))
+                .thenReturn(createValidOrchestrationResponseDTO(mockOrchestrationResult));
+
         ModelFilterDefaultClient client = new ModelFilterDefaultClient(mockArrowheadHelper);
+
         // Act
-        client.filterModel("model", "format", "elems", "repo");
+        client.filterModel("name", "format", "elems", "repo");
+
         // Assert
+        ArgumentCaptor<String> argumentCaptor = ArgumentCaptor.forClass(String.class);
+        Mockito.verify(mockArrowheadHelper)
+                .proceedOrchestration(argumentCaptor.capture());
         String actualInput = argumentCaptor.getValue();
+
         Assertions.assertThat(actualInput).isEqualTo("model-filter");
     }
 
@@ -64,21 +77,44 @@ public class ModelFilterDefaultClientTest {
     @Test
     public void filterModel_Validate_Orchestration_Result_Via_ArrowheadHelper() {
         // Arrange
+        OrchestrationResponseDTO mockOrchestrationResponse = createValidOrchestrationResponseDTO();
+        Mockito.when(mockArrowheadHelper.proceedOrchestration(Mockito.any()))
+                .thenReturn(mockOrchestrationResponse);
+
+        ModelFilterDefaultClient client = new ModelFilterDefaultClient(mockArrowheadHelper);
+
+        // Act
+        client.filterModel("name", "format", "elems", "repo");
+
+        // Assert
         ArgumentCaptor<OrchestrationResponseDTO> argumentCaptor = ArgumentCaptor
                 .forClass(OrchestrationResponseDTO.class);
-        ArrowheadHelper mockArrowheadHelper = Mockito.mock(ArrowheadHelper.class);
-
-        OrchestrationResponseDTO expectedOrchestrationResponse = createValidOrchestrationResponseDTO();
-        Mockito.when(mockArrowheadHelper.proceedOrchestration("model-filter"))
-                .thenReturn(expectedOrchestrationResponse);
-        Mockito.doNothing().when(mockArrowheadHelper)
+        Mockito.verify(mockArrowheadHelper)
                 .validateOrchestrationResponse(argumentCaptor.capture());
-        ModelFilterDefaultClient client = new ModelFilterDefaultClient(mockArrowheadHelper);
-        // Act
-        client.filterModel("model", "format", "elems", "repo");
-        // Assert
         OrchestrationResponseDTO actualInput = argumentCaptor.getValue();
-        Assertions.assertThat(actualInput).isEqualTo(expectedOrchestrationResponse);
+
+        Assertions.assertThat(actualInput).isEqualTo(mockOrchestrationResponse);
+    }
+
+    @Test
+    public void transformModel_Consumes_HttpService_With_Given_Parameters_And_Orchestration_Result_Via_ArrowheadHelper() {
+        // Arrange
+        OrchestrationResponseDTO mockOrchestrationResponse = createValidOrchestrationResponseDTO();
+        Mockito.when(mockArrowheadHelper.proceedOrchestration(Mockito.any()))
+                .thenReturn(mockOrchestrationResponse);
+
+        ModelTransformerClientDefaultImp client = new ModelTransformerClientDefaultImp(mockArrowheadHelper);
+
+        // Act
+        client.transformModel("format");
+
+        // Assert
+        Mockito.verify(mockArrowheadHelper, Mockito.times(1))
+                .consumeServiceHTTPByOrchestrationResult(
+                        Mockito.eq(mockOrchestrationResponse.getResponse().get(0)),
+                        Mockito.eq(TransformationListDTO.class), Mockito.eq(null),
+                        Mockito.eq("format"),
+                        Mockito.eq("format"));
     }
 
 }
