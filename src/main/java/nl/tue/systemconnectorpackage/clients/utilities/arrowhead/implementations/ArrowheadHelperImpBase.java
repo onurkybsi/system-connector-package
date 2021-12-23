@@ -306,7 +306,7 @@ public abstract class ArrowheadHelperImpBase {
             throw new InvalidParameterException("orchestrationResult cannot be null!");
         return orchestrationResult.getAuthorizationTokens() == null
                 ? null
-                : orchestrationResult.getAuthorizationTokens().get("HTTP-INSECURE-JSON");
+                : orchestrationResult.getAuthorizationTokens().get(getInterfaceName());
     }
 
     public <T> T consumeServiceHTTP(final Class<T> responseType, final HttpMethod httpMethod, final String address,
