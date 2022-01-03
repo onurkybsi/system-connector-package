@@ -5,7 +5,6 @@ import java.util.List;
 
 import nl.tue.systemconnectorpackage.clients.services.systemInformation.SystemInformationService;
 import org.apache.logging.log4j.LogManager;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -45,13 +44,19 @@ public class ArrowheadSeperatePackageImp extends ArrowheadHelperImpBase
         ServiceRegistryListResponseDTO allServiceRegistriesInArrowhead = getAllServiceRegistriesFromArrowhead();
 
         for (ArrowheadSystemInformation consumer : consumers) {
-            setLocalRepoByRegisteredConsumer(consumer, sendSystemRegistrationRequest(consumer));
+            try {
+                setLocalRepoByRegisteredConsumer(consumer, sendSystemRegistrationRequest(consumer));
 
-            List<ArrowheadServiceInformation> consumedServices = filterConsumedServicesFomServiceRegistryList(
-                    consumer.getConsumedServiceNames(), allServiceRegistriesInArrowhead);
+                List<ArrowheadServiceInformation> consumedServices = filterConsumedServicesFomServiceRegistryList(
+                        consumer.getConsumedServiceNames(), allServiceRegistriesInArrowhead);
 
-            for (ArrowheadServiceInformation consumedService : consumedServices) {
-                sendConsumedServiceRegistrationRequest(consumer, consumedService);
+                for (ArrowheadServiceInformation consumedService : consumedServices) {
+                    sendConsumedServiceRegistrationRequest(consumer, consumedService);
+                }
+            } catch (eu.arrowhead.common.exception.InvalidParameterException ex) {
+                logger.warn(String.format("Consumer: %s is already exists !", consumer.getSystemName()));
+            } catch (Exception ex) {
+                logger.error("Error occurred when registering consumers: ", ex);
             }
         }
     }

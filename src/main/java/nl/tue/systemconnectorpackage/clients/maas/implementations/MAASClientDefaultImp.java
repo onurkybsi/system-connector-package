@@ -35,8 +35,8 @@ public class MAASClientDefaultImp implements MAASClient {
             ModelCrawlerClient modelCrawlerClient, String systemDefinitionListResourcePath)
             throws UnavailableServerException, JsonSyntaxException, IOException {
         if (ValidationUtilities.containsNull(arrowheadHelper, repositoryManagerClient, modelFilterClient,
-                modelTransformerClient, modelCrawlerClient)
-                || !StringUtilities.isValid(systemDefinitionListResourcePath))
+                modelTransformerClient, modelCrawlerClient) ||
+                !StringUtilities.isValid(systemDefinitionListResourcePath))
             throw new InvalidParameterException("MAASClientDefaultImp parameters are not valid!");
         this.repositoryManagerClient = repositoryManagerClient;
         this.modelFilterClient = modelFilterClient;
