@@ -1,6 +1,6 @@
 # system-connector-package
 
-A Java library that provides clients to get services from MAAS and SAMOS systems.
+A Java library that provides clients to get services from _MAAS_ and _SAMOS_ systems.
 
 ## Installation
 
@@ -27,3 +27,20 @@ public class Initializer {
     }
 }
 ````
+
+## Usage
+
+After appropriate installation you can inject the clients via _Spring_
+
+As an example;
+``` java
+@Component
+public class ExampleClientModule {
+  @Autowired
+  private MAASClient maasClient;
+  
+  public HashMap<String, Object> invokeFilterModelService() {
+    return maasClient.getModelFilterClient().filterModel("test", "test", "test", "test");
+  }
+}
+```
