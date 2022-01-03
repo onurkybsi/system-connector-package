@@ -2,6 +2,8 @@ package nl.tue.systemconnectorpackage.clients.maas.implementations;
 
 import java.util.HashMap;
 
+import org.springframework.beans.factory.annotation.Value;
+
 import eu.arrowhead.common.dto.shared.OrchestrationResponseDTO;
 import eu.arrowhead.common.dto.shared.OrchestrationResultDTO;
 import nl.tue.systemconnectorpackage.clients.maas.ModelFilterClient;

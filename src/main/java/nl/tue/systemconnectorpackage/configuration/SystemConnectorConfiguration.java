@@ -23,18 +23,22 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.PropertySource;
 
 /**
  * Configures dependencies of nl.tue package via Spring Boot
  */
 @Configuration
+@PropertySource("classpath:application.properties")
+@ComponentScan("eu.arrowhead")
 public class SystemConnectorConfiguration {
     @Value("${maas_client_type:defaultImp}")
     private String implementationTypeOfMAASClient;
     @Value("${system_definition_list_resource_path}")
     private String systemDefinitionListResourcePath;
-    @Value("${custom_arrowhead_imp_bean_name}")
+    @Value("${custom_arrowhead_imp_bean_name:}")
     private String customArrowheadImpBeanName;
 
     @Bean
@@ -61,7 +65,7 @@ public class SystemConnectorConfiguration {
                     new ModelCrawlerClientDefaultImp(arrowheadHelper),
                     systemDefinitionListResourcePath);
         }
-        throw new UnsupportedOperationException("There is no any implementation by maas_client_type!");
+        throw new UnsupportedOperationException("There is no any MAASClient implementation by maas_client_type!");
     }
 
     @Bean
