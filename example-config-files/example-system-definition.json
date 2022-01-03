@@ -1,0 +1,19 @@
+[
+  {
+    "systemName": "example",
+    "address": "127.0.0.1",
+    "port": 8080,
+    "producedServices": [
+      {
+        "name": "say-n-times-hi",
+        "uri": "/say",
+        "metadata": {
+          "http-method": "GET",
+          "request-param-what": "what",
+          "request-param-times": "times"
+        }
+      }
+    ],
+    "consumedServicesNames": ["example-consumed-system"]
+  }
+]
