@@ -22,7 +22,7 @@ public interface ArrowheadHelper {
          *
          * @param systemDefinitionListResourcePath JSON file resource path for system
          *                                         definitions
-         * @see "/resources/system-definitions/example-system-definitions.json"
+         * @see "src/../example-config-files/example-system-definition.json"
          */
         void registerSystemsToArrowhead(String systemDefinitionListResourcePath)
                         throws UnavailableServerException, IOException, JsonSyntaxException;
