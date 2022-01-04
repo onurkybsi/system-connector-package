@@ -5,8 +5,7 @@ import eu.arrowhead.common.exception.UnavailableServerException;
 import eu.arrowhead.common.http.HttpService;
 import nl.tue.systemconnectorpackage.clients.maas.MAASClient;
 import nl.tue.systemconnectorpackage.clients.maas.implementations.*;
-import nl.tue.systemconnectorpackage.clients.services.systemInformation.SystemInformationService;
-import nl.tue.systemconnectorpackage.clients.utilities.arrowhead.implementations.ArrowheadSeperatePackageImp;
+import nl.tue.systemconnectorpackage.clients.utilities.arrowhead.implementations.ArrowheadHelperDefaultImp;
 import nl.tue.systemconnectorpackage.common.FileUtilityService;
 import nl.tue.systemconnectorpackage.common.HttpUtilityService;
 import nl.tue.systemconnectorpackage.common.StringUtilities;
@@ -14,8 +13,6 @@ import nl.tue.systemconnectorpackage.common.exceptions.InvalidParameterException
 import nl.tue.systemconnectorpackage.common.implementations.FileUtilityServiceDefaultImp;
 import nl.tue.systemconnectorpackage.common.implementations.HttpUtilityServiceDefaultImp;
 import nl.tue.systemconnectorpackage.clients.utilities.arrowhead.ArrowheadHelper;
-
-import java.io.IOException;
 
 import com.google.gson.JsonSyntaxException;
 
@@ -50,27 +47,21 @@ public class SystemConnectorConfiguration {
                 && context.getBean(customArrowheadImpBeanName) instanceof ArrowheadHelper) {
             return (ArrowheadHelper) context.getBean(customArrowheadImpBeanName);
         }
-        return new ArrowheadSeperatePackageImp(arrowheadService, fileUtilityService, httpService);
+        return new ArrowheadHelperDefaultImp(arrowheadService, fileUtilityService, httpService);
     }
 
     @Bean
     public MAASClient maasClient(@Autowired ArrowheadHelper arrowheadHelper,
             @Autowired HttpUtilityService httpUtilityService)
-            throws UnavailableServerException, JsonSyntaxException, IOException {
+            throws UnavailableServerException, JsonSyntaxException {
         if (implementationTypeOfMAASClient.equals("defaultImp")) {
             return new MAASClientDefaultImp(arrowheadHelper,
                     new RepositoryManagerClientDefaultImp(arrowheadHelper, httpUtilityService),
                     new ModelFilterDefaultClient(arrowheadHelper),
                     new ModelTransformerClientDefaultImp(arrowheadHelper),
-                    new ModelCrawlerClientDefaultImp(arrowheadHelper),
-                    systemDefinitionListResourcePath);
+                    new ModelCrawlerClientDefaultImp(arrowheadHelper));
         }
         throw new UnsupportedOperationException("There is no any MAASClient implementation by maas_client_type!");
-    }
-
-    @Bean
-    public SystemInformationService systemInformationService(@Autowired ArrowheadHelper arrowheadHelper) {
-        return (ArrowheadSeperatePackageImp) arrowheadHelper;
     }
 
     @Bean

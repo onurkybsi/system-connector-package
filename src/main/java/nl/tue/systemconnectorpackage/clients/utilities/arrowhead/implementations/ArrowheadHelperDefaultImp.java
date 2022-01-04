@@ -4,12 +4,12 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 import com.google.gson.JsonSyntaxException;
 import com.google.gson.reflect.TypeToken;
 
+import nl.tue.systemconnectorpackage.clients.utilities.arrowhead.ArrowheadHelper;
 import nl.tue.systemconnectorpackage.clients.utilities.arrowhead.exceptions.ArrowheadAuthorizationException;
 import nl.tue.systemconnectorpackage.clients.utilities.arrowhead.exceptions.ArrowheadOrchestrationException;
 import nl.tue.systemconnectorpackage.clients.utilities.arrowhead.exceptions.ArrowheadServiceRegistryException;
@@ -17,7 +17,9 @@ import nl.tue.systemconnectorpackage.clients.utilities.arrowhead.models.Arrowhea
 import nl.tue.systemconnectorpackage.clients.utilities.arrowhead.models.ArrowheadSystemInformation;
 import nl.tue.systemconnectorpackage.clients.utilities.arrowhead.models.AuthorizationIntraCloudListResponseDTO;
 import nl.tue.systemconnectorpackage.clients.utilities.arrowhead.models.AuthorizationIntraCloudRequestDTO;
+import nl.tue.systemconnectorpackage.clients.utilities.arrowhead.models.ServiceRegistryListResponseDTO;
 
+import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpMethod;
@@ -44,12 +46,10 @@ import nl.tue.systemconnectorpackage.common.StringUtilities;
 import nl.tue.systemconnectorpackage.common.exceptions.InvalidParameterException;
 import nl.tue.systemconnectorpackage.common.exceptions.UnexpectedException;
 
-// TO-DO If the registrations wasn't done here, we should load it from Arrowhead!
 /**
- * Abstract base class that provides some functionalities for ArrowheadHelper
- * implementations
+ * Provides various functionalities to communicate with Arrowhead
  */
-public abstract class ArrowheadHelperImpBase {
+public class ArrowheadHelperDefaultImp implements ArrowheadHelper {
     @Value("${arrowhead_authorization_address:localhost}")
     protected String authorizationAddress;
     @Value("${arrowhead_authorization_port:8445}")
@@ -63,35 +63,30 @@ public abstract class ArrowheadHelperImpBase {
     @Value("${server.ssl.enabled:false}")
     protected boolean sslEnabled;
 
-    private final List<ArrowheadSystemInformation> connectedSystemsLocalRepository = new ArrayList<>();
-
     protected ArrowheadService arrowheadService;
     protected HttpService httpService;
     protected Logger logger;
 
     private FileUtilityService fileUtilityService;
 
-    protected ArrowheadHelperImpBase(ArrowheadService arrowheadService, FileUtilityService fileUtilityService,
-            HttpService httpService, Logger logger) {
-        validateConstructionParameters(arrowheadService, fileUtilityService, httpService, logger);
+    public ArrowheadHelperDefaultImp(ArrowheadService arrowheadService, FileUtilityService fileUtilityService,
+            HttpService httpService) {
+        validateConstructionParameters(arrowheadService, fileUtilityService, httpService);
         this.arrowheadService = arrowheadService;
         this.fileUtilityService = fileUtilityService;
         this.httpService = httpService;
-        this.logger = logger;
+        this.logger = LogManager.getLogger(ArrowheadHelperDefaultImp.class);
     }
 
     private void validateConstructionParameters(final ArrowheadService arrowheadService,
             final FileUtilityService fileUtilityService,
-            final HttpService httpService,
-            Logger logger) throws InvalidParameterException {
+            final HttpService httpService) throws InvalidParameterException {
         if (arrowheadService == null)
             throw new InvalidParameterException("arrowheadService cannot be null!");
         if (fileUtilityService == null)
             throw new InvalidParameterException("fileUtilityService cannot be null!");
         if (httpService == null)
             throw new InvalidParameterException("httpService cannot be null!");
-        if (logger == null)
-            throw new InvalidParameterException("logger cannot be null!");
     }
 
     public void registerSystemsToArrowhead(final String systemDefinitionListResourcePath)
@@ -101,9 +96,10 @@ public abstract class ArrowheadHelperImpBase {
 
         checkCoreSystemAvailabilities();
 
-        loadSystemInformationListFromResourceToLocalRepository(systemDefinitionListResourcePath);
-        registerProviders();
-        registerConsumers(getConsumersFromLocalRepo());
+        List<ArrowheadSystemInformation> systems = extractSystemInformationListFromSystemDefinitionFile(
+                systemDefinitionListResourcePath);
+        registerProviders(filterProvidersOfSystemList(systems));
+        registerConsumers(filterConsumersOfSystemList(systems));
     }
 
     private void checkCoreSystemAvailabilities() {
@@ -119,7 +115,8 @@ public abstract class ArrowheadHelperImpBase {
         arrowheadService.updateCoreServiceURIs(CoreSystem.ORCHESTRATOR);
     }
 
-    private void loadSystemInformationListFromResourceToLocalRepository(final String systemDefinitionListResourcePath)
+    private List<ArrowheadSystemInformation> extractSystemInformationListFromSystemDefinitionFile(
+            final String systemDefinitionListResourcePath)
             throws IOException, JsonSyntaxException {
         List<ArrowheadSystemInformation> systemsToConnect = fileUtilityService
                 .loadJsonFile(new TypeToken<List<ArrowheadSystemInformation>>() {
@@ -127,22 +124,22 @@ public abstract class ArrowheadHelperImpBase {
         if (systemsToConnect == null)
             throw new UnexpectedException("Failed to load systems to connect from source!");
 
-        connectedSystemsLocalRepository.addAll(systemsToConnect);
+        return systemsToConnect;
     }
 
-    private void registerProviders() {
-        for (ArrowheadSystemInformation provider : getProvidersFromLocalRepo())
-            registerProviderAndSetItsDetailsInLocalRepository(provider);
+    private void registerProviders(List<ArrowheadSystemInformation> providers) {
+        for (ArrowheadSystemInformation provider : providers)
+            registerProvider(provider);
     }
 
-    private List<ArrowheadSystemInformation> getProvidersFromLocalRepo() {
-        return connectedSystemsLocalRepository
+    private List<ArrowheadSystemInformation> filterProvidersOfSystemList(List<ArrowheadSystemInformation> systems) {
+        return systems
                 .stream()
                 .filter(system -> system != null && !system.getProducedServices().isEmpty())
                 .collect(Collectors.toList());
     }
 
-    private void registerProviderAndSetItsDetailsInLocalRepository(final ArrowheadSystemInformation provider) {
+    private void registerProvider(final ArrowheadSystemInformation provider) {
         SystemRequestDTO systemRequest = createSystemRequestBySystemInformation(provider);
 
         for (ArrowheadServiceInformation service : provider.getProducedServices()) {
@@ -150,10 +147,7 @@ public abstract class ArrowheadHelperImpBase {
                 return;
 
             ServiceRegistryRequestDTO serviceCreationRequest = createServiceRegistrationRequest(systemRequest, service);
-            ServiceRegistryResponseDTO response = arrowheadService
-                    .forceRegisterServiceToServiceRegistry(serviceCreationRequest);
-
-            setProviderDetailsInLocalRepositoryByServiceRegistrationResponse(provider, service, response);
+            arrowheadService.forceRegisterServiceToServiceRegistry(serviceCreationRequest);
         }
     }
 
@@ -192,37 +186,85 @@ public abstract class ArrowheadHelperImpBase {
         return serviceRegistryRequest;
     }
 
-    private static void setProviderDetailsInLocalRepositoryByServiceRegistrationResponse(
-            final ArrowheadSystemInformation provider, final ArrowheadServiceInformation serviceToSetDetails,
-            final ServiceRegistryResponseDTO response) {
-        provider.setId(response.getProvider().getId());
-        serviceToSetDetails.setId(response.getServiceDefinition().getId());
-        serviceToSetDetails.setProviderId(response.getProvider().getId());
-    }
-
-    private List<ArrowheadSystemInformation> getConsumersFromLocalRepo() {
-        return connectedSystemsLocalRepository
+    private List<ArrowheadSystemInformation> filterConsumersOfSystemList(
+            List<ArrowheadSystemInformation> systems) {
+        return systems
                 .stream()
                 .filter(system -> system != null && !system.getConsumedServiceNames().isEmpty())
                 .collect(Collectors.toList());
     }
 
-    protected abstract void registerConsumers(List<ArrowheadSystemInformation> consumers);
+    private void registerConsumers(List<ArrowheadSystemInformation> consumers) {
+        if (consumers.isEmpty())
+            return;
 
-    protected SystemResponseDTO sendSystemRegistrationRequest(ArrowheadSystemInformation system) {
-        SystemRequestDTO request = createSystemRequestBySystemInformation(system);
-        ResponseEntity<SystemResponseDTO> response = httpService.sendRequest(Utilities.createURI(this.getUriScheme(),
-                serviceRegistryAddress, serviceRegistryPort,
-                ArrowheadConstants.CONSUMER_SYSTEM_REGISTRATION_URI),
-                HttpMethod.POST, SystemResponseDTO.class, request);
-        if (response == null || response.getStatusCodeValue() != HttpStatus.CREATED.value())
-            throw new ArrowheadServiceRegistryException(
-                    "Sending system registration request unsuccessful for: " + system.getSystemName());
+        ServiceRegistryListResponseDTO allServiceRegistriesInArrowhead = getAllServiceRegistriesFromArrowhead();
+        for (ArrowheadSystemInformation consumer : consumers) {
+            try {
+                sendSystemRegistrationRequest(consumer);
 
-        return response.getBody();
+                List<ArrowheadServiceInformation> consumedServices = filterConsumedServicesFomServiceRegistryList(
+                        consumer.getConsumedServiceNames(), allServiceRegistriesInArrowhead);
+
+                for (ArrowheadServiceInformation consumedService : consumedServices) {
+                    sendConsumedServiceRegistrationRequest(consumer, consumedService);
+                }
+            } catch (Exception ex) {
+                logger.error("Error occurred when registering consumers: ", ex);
+            }
+        }
     }
 
-    protected AuthorizationIntraCloudListResponseDTO sendConsumedServiceRegistrationRequest(
+    private ServiceRegistryListResponseDTO getAllServiceRegistriesFromArrowhead() {
+        ResponseEntity<ServiceRegistryListResponseDTO> responseFromServiceRegistry = httpService.sendRequest(
+                Utilities.createURI(getUriScheme(), serviceRegistryAddress, serviceRegistryPort,
+                        "/serviceregistry/mgmt"),
+                HttpMethod.GET, ServiceRegistryListResponseDTO.class);
+        if (responseFromServiceRegistry == null || responseFromServiceRegistry.getStatusCode() != HttpStatus.OK
+                || responseFromServiceRegistry.getBody() == null)
+            throw new ArrowheadServiceRegistryException("Receiving service registries from Arrowhead unsuccessful!");
+        return responseFromServiceRegistry.getBody();
+    }
+
+    private List<ArrowheadServiceInformation> filterConsumedServicesFomServiceRegistryList(
+            List<String> consumedServiceNames, ServiceRegistryListResponseDTO serviceRegistryListResponseDTO) {
+        List<ArrowheadServiceInformation> consumedServices = new ArrayList<>();
+        for (ServiceRegistryResponseDTO serviceRegistryInfo : serviceRegistryListResponseDTO.getData()) {
+            if (serviceRegistryInfo == null || !consumedServiceNames
+                    .contains(serviceRegistryInfo.getServiceDefinition().getServiceDefinition()))
+                continue;
+            consumedServices.add(convertServiceRegistryResponseToArrowheadServiceInformation(serviceRegistryInfo));
+        }
+        return consumedServices;
+    }
+
+    private ArrowheadServiceInformation convertServiceRegistryResponseToArrowheadServiceInformation(
+            ServiceRegistryResponseDTO serviceRegistryInfo) {
+        return new ArrowheadServiceInformation(
+                serviceRegistryInfo.getServiceDefinition().getId(),
+                serviceRegistryInfo.getProvider().getId(),
+                serviceRegistryInfo.getServiceDefinition().getServiceDefinition(),
+                serviceRegistryInfo.getServiceUri(),
+                serviceRegistryInfo.getMetadata());
+    }
+
+    private void sendSystemRegistrationRequest(ArrowheadSystemInformation system) {
+        try {
+            SystemRequestDTO request = createSystemRequestBySystemInformation(system);
+            ResponseEntity<SystemResponseDTO> response = httpService.sendRequest(
+                    Utilities.createURI(this.getUriScheme(),
+                            serviceRegistryAddress, serviceRegistryPort,
+                            ArrowheadConstants.CONSUMER_SYSTEM_REGISTRATION_URI),
+                    HttpMethod.POST, SystemResponseDTO.class, request);
+            if (response == null || response.getStatusCodeValue() != HttpStatus.CREATED.value())
+                throw new ArrowheadServiceRegistryException(
+                        "Sending system registration request unsuccessful for: " + system.getSystemName());
+        } catch (eu.arrowhead.common.exception.InvalidParameterException ex) {
+            logger.warn(String.format("Consumer: %s is already exists !", system.getSystemName()));
+        }
+    }
+
+    private AuthorizationIntraCloudListResponseDTO sendConsumedServiceRegistrationRequest(
             ArrowheadSystemInformation consumer,
             ArrowheadServiceInformation consumedService) {
         AuthorizationIntraCloudRequestDTO request = createAuthorizationIntraCloudRequestBySystemInformation(consumer,
@@ -250,15 +292,14 @@ public abstract class ArrowheadHelperImpBase {
                                                                                               */));
     }
 
-    protected OrchestrationResponseDTO proceedOrchestration(String serviceName,
-            OrchestrationFormRequestDTO.Builder orchestrationRequestBuilder) {
+    public OrchestrationResponseDTO proceedOrchestration(String serviceName) {
         if (!StringUtilities.isValid(serviceName))
             throw new InvalidParameterException("serviceName is not valid!");
 
         final ServiceQueryFormDTO serviceQueryForm = new ServiceQueryFormDTO.Builder(serviceName)
                 .interfaces(getInterfaceName())
                 .build();
-        final OrchestrationFormRequestDTO orchestrationFormRequest = orchestrationRequestBuilder
+        final OrchestrationFormRequestDTO orchestrationFormRequest = arrowheadService.getOrchestrationFormBuilder()
                 .requestedService(serviceQueryForm)
                 .flag(OrchestrationFlags.Flag.MATCHMAKING, true) /**
                                                                   * TO-DO: I should talk about flags with the team,
@@ -318,27 +359,7 @@ public abstract class ArrowheadHelperImpBase {
                 token, payload, queryParams);
     }
 
-    protected String getUriScheme() {
+    public String getUriScheme() {
         return sslEnabled ? "https" : "http";
-    }
-
-    public ArrowheadSystemInformation getSystemInformationByName(String systemName) {
-        if (!StringUtilities.isValid(systemName))
-            throw new InvalidParameterException("systemName is not valid!");
-        Optional<ArrowheadSystemInformation> system = connectedSystemsLocalRepository
-                .stream()
-                .filter(s -> s.getSystemName().equals(systemName))
-                .findFirst();
-        if (system.isEmpty())
-            throw new InvalidParameterException("There is no any system called: " + systemName);
-        return system.get();
-    }
-
-    public boolean checkSystemIsExistByName(String systemName) {
-        if (!StringUtilities.isValid(systemName))
-            throw new InvalidParameterException("systemName is not valid!");
-        return connectedSystemsLocalRepository
-                .stream()
-                .anyMatch(system -> system.getSystemName().equals(systemName));
     }
 }

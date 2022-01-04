@@ -1,6 +1,5 @@
 package nl.tue.systemconnectorpackage.clients.maas.implementations;
 
-import nl.tue.systemconnectorpackage.common.StringUtilities;
 import nl.tue.systemconnectorpackage.common.ValidationUtilities;
 import nl.tue.systemconnectorpackage.common.exceptions.InvalidParameterException;
 import nl.tue.systemconnectorpackage.clients.utilities.arrowhead.ArrowheadHelper;
@@ -9,8 +8,6 @@ import nl.tue.systemconnectorpackage.clients.maas.ModelCrawlerClient;
 import nl.tue.systemconnectorpackage.clients.maas.ModelFilterClient;
 import nl.tue.systemconnectorpackage.clients.maas.ModelTransformerClient;
 import nl.tue.systemconnectorpackage.clients.maas.RepositoryManagerClient;
-
-import java.io.IOException;
 
 import com.google.gson.JsonSyntaxException;
 
@@ -32,18 +29,16 @@ public class MAASClientDefaultImp implements MAASClient {
 
     public MAASClientDefaultImp(ArrowheadHelper arrowheadHelper, RepositoryManagerClient repositoryManagerClient,
             ModelFilterClient modelFilterClient, ModelTransformerClient modelTransformerClient,
-            ModelCrawlerClient modelCrawlerClient, String systemDefinitionListResourcePath)
-            throws UnavailableServerException, JsonSyntaxException, IOException {
+            ModelCrawlerClient modelCrawlerClient)
+            throws UnavailableServerException, JsonSyntaxException {
         if (ValidationUtilities.containsNull(arrowheadHelper, repositoryManagerClient, modelFilterClient,
-                modelTransformerClient, modelCrawlerClient) ||
-                !StringUtilities.isValid(systemDefinitionListResourcePath))
+                modelTransformerClient, modelCrawlerClient))
             throw new InvalidParameterException("MAASClientDefaultImp parameters are not valid!");
         this.repositoryManagerClient = repositoryManagerClient;
         this.modelFilterClient = modelFilterClient;
         this.modelTransformerClient = modelTransformerClient;
         this.modelCrawlerClient = modelCrawlerClient;
 
-        arrowheadHelper.registerSystemsToArrowhead(systemDefinitionListResourcePath);
         logger.info("MAAS client constructed successfully !");
     }
 

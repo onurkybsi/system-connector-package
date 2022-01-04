@@ -8,7 +8,6 @@ import java.util.List;
 import com.google.gson.JsonSyntaxException;
 import com.google.gson.reflect.TypeToken;
 
-import org.apache.logging.log4j.Logger;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -35,18 +34,15 @@ import nl.tue.systemconnectorpackage.common.exceptions.InvalidParameterException
 import nl.tue.systemconnectorpackage.common.exceptions.UnexpectedException;
 import nl.tue.systemconnectorpackage.common.implementations.FileUtilityServiceDefaultImp;
 
-public class ArrowheadHelperImpBaseTest {
+public class ArrowheadHelperDefaultImpTest {
         private final String MOCK_SYSTEM_DEFINITIONS_PATH = "system-definitions/mock-system-definitions.json";
-        private final String SERVICELESS_MOCK_SYSTEM_DEFINITIONS_PATH = "system-definitions/mock-system-definitions-serviceless.json";
         private final String EMPTY_SYSTEM_DEFINITION_PATH = "system-definitions/empty-system-definitions.json";
-
-        private final String MOCK_SYSTEM_NAME_IN_SERVICELESS_MOCK_SYSTEM_DEFINITIONS_JSON = "mock-system";
 
         @Test
         public void registerSystemToArrowhead_Throws_InvalidParameterException_If_Given_SystemDefinitionListResourcePath_Is_Null() {
                 // Arrange
                 String invalidSystemDefinitionListResourcePath = null;
-                ArrowheadHelperImpBase helperImpBase = buildMockArrowheadHelperImpBase();
+                ArrowheadHelperDefaultImp helperImpBase = buildMockArrowheadHelperImpBase();
                 // Act and Assert
                 Assertions.assertThatThrownBy(
                                 () -> helperImpBase.registerSystemsToArrowhead(invalidSystemDefinitionListResourcePath))
@@ -54,23 +50,22 @@ public class ArrowheadHelperImpBaseTest {
                                 .hasMessageContaining("systemDefinitionListResourcePath is not valid!");
         }
 
-        private ArrowheadHelperImpBase buildMockArrowheadHelperImpBase() {
+        private ArrowheadHelperDefaultImp buildMockArrowheadHelperImpBase() {
                 return buildMockArrowheadHelperImpBase(null);
         }
 
-        private ArrowheadHelperImpBase buildMockArrowheadHelperImpBase(
+        private ArrowheadHelperDefaultImp buildMockArrowheadHelperImpBase(
                         FileUtilityService mockFileUtilityService) {
                 ArrowheadService mockArrowheadService = Mockito.mock(ArrowheadService.class, Mockito.withSettings());
                 FileUtilityService fileUtilityService = mockFileUtilityService == null
                                 ? new FileUtilityServiceDefaultImp()
                                 : mockFileUtilityService;
                 HttpService mockHttpService = Mockito.mock(HttpService.class);
-                Logger mockLogger = Mockito.mock(Logger.class);
 
-                return Mockito.mock(ArrowheadHelperImpBase.class,
+                return Mockito.mock(ArrowheadHelperDefaultImp.class,
                                 Mockito.withSettings()
                                                 .useConstructor(mockArrowheadService, fileUtilityService,
-                                                                mockHttpService, mockLogger)
+                                                                mockHttpService)
                                                 .defaultAnswer(Mockito.CALLS_REAL_METHODS));
         }
 
@@ -78,7 +73,7 @@ public class ArrowheadHelperImpBaseTest {
         public void registerSystemToArrowhead_Throws_InvalidParameterException_If_Given_SystemDefinitionListResourcePath_Is_Empty() {
                 // Arrange
                 String invalidSystemDefinitionListResourcePath = "";
-                ArrowheadHelperImpBase helperImpBase = buildMockArrowheadHelperImpBase();
+                ArrowheadHelperDefaultImp helperImpBase = buildMockArrowheadHelperImpBase();
                 // Act and Assert
                 Assertions.assertThatThrownBy(
                                 () -> helperImpBase.registerSystemsToArrowhead(invalidSystemDefinitionListResourcePath))
@@ -89,7 +84,7 @@ public class ArrowheadHelperImpBaseTest {
         @Test
         public void registerSystemToArrowhead_Throws_UnavailableServerException_If_Arrowhead_ServiceRegistry_Server_Is_Unavailable() {
                 // Arrange
-                ArrowheadHelperImpBase helperImpBase = buildMockArrowheadHelperImpBase();
+                ArrowheadHelperDefaultImp helperImpBase = buildMockArrowheadHelperImpBase();
                 Mockito.when(helperImpBase.arrowheadService.echoCoreSystem(CoreSystem.SERVICE_REGISTRY))
                                 .thenReturn(false);
                 // Act and Assert
@@ -102,7 +97,7 @@ public class ArrowheadHelperImpBaseTest {
         @Test
         public void registerSystemToArrowhead_Throws_UnavailableServerException_If_Arrowhead_Authorization_Server_Is_Unavailable() {
                 // Arrange
-                ArrowheadHelperImpBase helperImpBase = buildMockArrowheadHelperImpBase();
+                ArrowheadHelperDefaultImp helperImpBase = buildMockArrowheadHelperImpBase();
                 Mockito.when(helperImpBase.arrowheadService.echoCoreSystem(CoreSystem.SERVICE_REGISTRY))
                                 .thenReturn(true);
                 Mockito.when(helperImpBase.arrowheadService.echoCoreSystem(CoreSystem.AUTHORIZATION))
@@ -118,7 +113,7 @@ public class ArrowheadHelperImpBaseTest {
         public void registerSystemToArrowhead_Initializes_ArrowheadContext_For_CoreSystem_Authorization_If_The_System_Is_Available()
                         throws UnavailableServerException, JsonSyntaxException, IOException {
                 // Arrange
-                ArrowheadHelperImpBase helperImpBase = buildMockArrowheadHelperImpBase();
+                ArrowheadHelperDefaultImp helperImpBase = buildMockArrowheadHelperImpBase();
                 setupCoreSystemsCheck(helperImpBase);
                 Mockito.doNothing().when(helperImpBase.arrowheadService)
                                 .updateCoreServiceURIs(Mockito.any(CoreSystem.class));
@@ -132,7 +127,7 @@ public class ArrowheadHelperImpBaseTest {
                 Assertions.assertThat(actualValue).isEqualTo(CoreSystem.AUTHORIZATION);
         }
 
-        private void setupCoreSystemsCheck(ArrowheadHelperImpBase helperImpBase) {
+        private void setupCoreSystemsCheck(ArrowheadHelperDefaultImp helperImpBase) {
                 Mockito.when(helperImpBase.arrowheadService.echoCoreSystem(CoreSystem.SERVICE_REGISTRY))
                                 .thenReturn(true);
                 Mockito.when(helperImpBase.arrowheadService.echoCoreSystem(CoreSystem.AUTHORIZATION))
@@ -144,7 +139,7 @@ public class ArrowheadHelperImpBaseTest {
         @Test
         public void registerSystemToArrowhead_Throws_UnavailableServerException_If_Arrowhead_Orchestrator_Server_Is_Unavailable() {
                 // Arrange
-                ArrowheadHelperImpBase helperImpBase = buildMockArrowheadHelperImpBase();
+                ArrowheadHelperDefaultImp helperImpBase = buildMockArrowheadHelperImpBase();
                 Mockito.when(helperImpBase.arrowheadService.echoCoreSystem(CoreSystem.SERVICE_REGISTRY))
                                 .thenReturn(true);
                 Mockito.when(helperImpBase.arrowheadService.echoCoreSystem(CoreSystem.AUTHORIZATION))
@@ -162,7 +157,7 @@ public class ArrowheadHelperImpBaseTest {
         public void registerSystemToArrowhead_Initializes_ArrowheadContext_For_CoreSystem_Orchestrator_If_The_System_Is_Available()
                         throws UnavailableServerException, JsonSyntaxException, IOException {
                 // Arrange
-                ArrowheadHelperImpBase helperImpBase = buildMockArrowheadHelperImpBase();
+                ArrowheadHelperDefaultImp helperImpBase = buildMockArrowheadHelperImpBase();
                 setupCoreSystemsCheck(helperImpBase);
                 Mockito.doNothing().when(helperImpBase.arrowheadService)
                                 .updateCoreServiceURIs(Mockito.any(CoreSystem.class));
@@ -177,22 +172,6 @@ public class ArrowheadHelperImpBaseTest {
         }
 
         @Test
-        public void registerSystemToArrowhead_Loads_Systems_From_Json_File_By_Given_FilePath_To_LocalConnectedSystemRepository()
-                        throws UnavailableServerException, JsonSyntaxException, IOException {
-                // Arrange
-                ArrowheadHelperImpBase helperImpBase = buildMockArrowheadHelperImpBase();
-                setupCoreSystemsCheck(helperImpBase);
-                // Act
-                helperImpBase.registerSystemsToArrowhead(SERVICELESS_MOCK_SYSTEM_DEFINITIONS_PATH);
-                // Assert
-                Assertions
-                                .assertThat(helperImpBase
-                                                .checkSystemIsExistByName(
-                                                                MOCK_SYSTEM_NAME_IN_SERVICELESS_MOCK_SYSTEM_DEFINITIONS_JSON))
-                                .isTrue();
-        }
-
-        @Test
         public void registerSystemToArrowhead_Throws_UnexpectedException_If_Loading_System_Definitions_Fails()
                         throws UnavailableServerException, JsonSyntaxException, IOException {
                 // Arrange
@@ -201,7 +180,7 @@ public class ArrowheadHelperImpBaseTest {
                                 ArgumentMatchers.anyString()))
                                 .thenReturn(null);
 
-                ArrowheadHelperImpBase helperImpBase = buildMockArrowheadHelperImpBase(mockFileUtilityService);
+                ArrowheadHelperDefaultImp helperImpBase = buildMockArrowheadHelperImpBase(mockFileUtilityService);
                 setupCoreSystemsCheck(helperImpBase);
                 // Act and Assert
                 Assertions.assertThatThrownBy(
@@ -214,7 +193,7 @@ public class ArrowheadHelperImpBaseTest {
         public void registerSystemToArrowhead_Does_Not_Register_Any_Provider_If_There_Is_No_Any_SystemDefinition_In_Json_File_In_Given_Path()
                         throws UnavailableServerException, JsonSyntaxException, IOException {
                 // Arrange
-                ArrowheadHelperImpBase helperImpBase = buildMockArrowheadHelperImpBase();
+                ArrowheadHelperDefaultImp helperImpBase = buildMockArrowheadHelperImpBase();
                 setupCoreSystemsCheck(helperImpBase);
                 // Act
                 helperImpBase.registerSystemsToArrowhead(EMPTY_SYSTEM_DEFINITION_PATH);
@@ -227,17 +206,7 @@ public class ArrowheadHelperImpBaseTest {
         @Test
         public void registerSystemToArrowhead_Does_Not_Register_Any_Consumer_If_There_Is_No_Any_SystemDefinition_In_Json_File_In_Given_Path()
                         throws UnavailableServerException, JsonSyntaxException, IOException {
-                // Arrange
-                ArrowheadHelperImpBase helperImpBase = buildMockArrowheadHelperImpBase();
-                setupCoreSystemsCheck(helperImpBase);
-                Mockito.doNothing().when(helperImpBase).registerConsumers(Mockito.anyList());
-                // Act
-                helperImpBase.registerSystemsToArrowhead(EMPTY_SYSTEM_DEFINITION_PATH);
-                // Assert
-                ArgumentCaptor<List<ArrowheadSystemInformation>> argumentCaptor = ArgumentCaptor.forClass(List.class);
-                Mockito.verify(helperImpBase).registerConsumers(argumentCaptor.capture());
-                List<ArrowheadSystemInformation> actualValue = argumentCaptor.getValue();
-                Assertions.assertThat(actualValue).isEmpty();
+                // TO-DO...
         }
 
         @Test
@@ -260,7 +229,7 @@ public class ArrowheadHelperImpBaseTest {
                                 ArgumentMatchers.anyString()))
                                 .thenReturn(mockProviders);
 
-                ArrowheadHelperImpBase helperImpBase = buildMockArrowheadHelperImpBase(mockFileUtilityService);
+                ArrowheadHelperDefaultImp helperImpBase = buildMockArrowheadHelperImpBase(mockFileUtilityService);
 
                 ServiceRegistryResponseDTO mockResponse = new ServiceRegistryResponseDTO();
                 SystemResponseDTO mockSystem = new SystemResponseDTO();
@@ -292,40 +261,13 @@ public class ArrowheadHelperImpBaseTest {
         @Test
         public void registerSystemToArrowhead_Registers_Consumers_To_Arrowhead()
                         throws IOException {
-                // Arrange
-                FileUtilityService mockFileUtilityService = Mockito.mock(FileUtilityService.class);
-                ArrayList<ArrowheadSystemInformation> mockConsumers = new ArrayList<>();
-                List<String> consumedMockServiceNames = new ArrayList<>();
-                consumedMockServiceNames.add("mock-service");
-                mockConsumers.add(new ArrowheadSystemInformation("mock-consumer-1",
-                                "localhost", 5000,
-                                new ArrayList<>(), consumedMockServiceNames));
-                Mockito.when(mockFileUtilityService.loadJsonFile(
-                                ArgumentMatchers.any(TypeToken.class),
-                                ArgumentMatchers.anyString())).thenReturn(mockConsumers);
-
-                ArrowheadHelperImpBase helperImpBase = buildMockArrowheadHelperImpBase(mockFileUtilityService);
-                Mockito.doNothing().when(helperImpBase)
-                                .registerConsumers(Mockito.anyList());
-                setupCoreSystemsCheck(helperImpBase);
-                // Act
-                helperImpBase.registerSystemsToArrowhead("some-file.json");
-                // Assert
-                ArgumentCaptor<List<ArrowheadSystemInformation>> argumentCaptor = ArgumentCaptor.forClass(List.class);
-                Mockito.verify(helperImpBase).registerConsumers(argumentCaptor.capture());
-                List<List<ArrowheadSystemInformation>> actualValue = argumentCaptor.getAllValues();
-
-                boolean invokingCountIsLikeExpected = actualValue.size() == 1;
-                boolean callingParameterIsLikeExpected = actualValue.get(0).containsAll(mockConsumers);
-
-                Assertions.assertThat(invokingCountIsLikeExpected &&
-                                callingParameterIsLikeExpected).isTrue();
+                // TO-DO...
         }
 
         @Test
         public void getInterfaceName_Return_HTTP_SECURE_JSON_If_Ssl_Enabled() {
                 // Arrange
-                ArrowheadHelperImpBase helperImpBase = buildMockArrowheadHelperImpBase();
+                ArrowheadHelperDefaultImp helperImpBase = buildMockArrowheadHelperImpBase();
                 ReflectionTestUtils.setField(helperImpBase, "sslEnabled", true);
                 // Act
                 String actualResult = helperImpBase.getInterfaceName();
@@ -337,7 +279,7 @@ public class ArrowheadHelperImpBaseTest {
         @Test
         public void getInterfaceName_Return_HTTP_INSECURE_JSON_If_Ssl_Enabled() {
                 // Arrange
-                ArrowheadHelperImpBase helperImpBase = buildMockArrowheadHelperImpBase();
+                ArrowheadHelperDefaultImp helperImpBase = buildMockArrowheadHelperImpBase();
                 ReflectionTestUtils.setField(helperImpBase, "sslEnabled", false);
                 // Act
                 String actualResult = helperImpBase.getInterfaceName();
@@ -349,7 +291,7 @@ public class ArrowheadHelperImpBaseTest {
         @Test
         public void validateOrchestrationResponse_Throws_ArrowheadOrchestrationException_If_Given_OrchestrationResponse_Is_Null() {
                 // Arrange
-                ArrowheadHelperImpBase helperImpBase = buildMockArrowheadHelperImpBase();
+                ArrowheadHelperDefaultImp helperImpBase = buildMockArrowheadHelperImpBase();
                 // Act and Assert
                 Assertions.assertThatThrownBy(() -> helperImpBase.validateOrchestrationResponse(null))
                                 .isInstanceOf(ArrowheadOrchestrationException.class)
@@ -361,7 +303,7 @@ public class ArrowheadHelperImpBaseTest {
                 // Arrange
                 OrchestrationResponseDTO mockOrchestrationResponse = new OrchestrationResponseDTO();
                 mockOrchestrationResponse.setResponse(null);
-                ArrowheadHelperImpBase helperImpBase = buildMockArrowheadHelperImpBase();
+                ArrowheadHelperDefaultImp helperImpBase = buildMockArrowheadHelperImpBase();
                 // Act and Assert
                 Assertions.assertThatThrownBy(
                                 () -> helperImpBase.validateOrchestrationResponse(mockOrchestrationResponse))
@@ -374,7 +316,7 @@ public class ArrowheadHelperImpBaseTest {
                 // Arrange
                 OrchestrationResponseDTO mockOrchestrationResponse = new OrchestrationResponseDTO();
                 mockOrchestrationResponse.setResponse(new ArrayList<OrchestrationResultDTO>());
-                ArrowheadHelperImpBase helperImpBase = buildMockArrowheadHelperImpBase();
+                ArrowheadHelperDefaultImp helperImpBase = buildMockArrowheadHelperImpBase();
                 // Act and Assert
                 Assertions.assertThatThrownBy(
                                 () -> helperImpBase.validateOrchestrationResponse(mockOrchestrationResponse))
@@ -385,7 +327,7 @@ public class ArrowheadHelperImpBaseTest {
         @Test
         public void consumeServiceHTTPByOrchestrationResult_Throws_InvalidParameterException_If_Given_OrchestrationResult_Is_Null() {
                 // Arrange
-                ArrowheadHelperImpBase helperImpBase = buildMockArrowheadHelperImpBase();
+                ArrowheadHelperDefaultImp helperImpBase = buildMockArrowheadHelperImpBase();
                 // Act and Assert
                 Assertions.assertThatThrownBy(() -> helperImpBase.consumeServiceHTTPByOrchestrationResult(null,
                                 HashMap.class, null, new String[] {}))
@@ -397,7 +339,7 @@ public class ArrowheadHelperImpBaseTest {
         public void consumeServiceHTTPByOrchestrationResult_Throws_InvalidParameterException_If_Given_OrchestrationResult_Provider_Is_Null() {
                 // Arrange
                 OrchestrationResultDTO mockOrchestrationResult = new OrchestrationResultDTO();
-                ArrowheadHelperImpBase helperImpBase = buildMockArrowheadHelperImpBase();
+                ArrowheadHelperDefaultImp helperImpBase = buildMockArrowheadHelperImpBase();
                 // Act and Assert
                 Assertions.assertThatThrownBy(
                                 () -> helperImpBase.consumeServiceHTTPByOrchestrationResult(mockOrchestrationResult,
@@ -411,7 +353,7 @@ public class ArrowheadHelperImpBaseTest {
                 // Arrange
                 OrchestrationResultDTO mockOrchestrationResult = new OrchestrationResultDTO();
                 mockOrchestrationResult.setProvider(new SystemResponseDTO());
-                ArrowheadHelperImpBase helperImpBase = buildMockArrowheadHelperImpBase();
+                ArrowheadHelperDefaultImp helperImpBase = buildMockArrowheadHelperImpBase();
                 // Act and Assert
                 Assertions.assertThatThrownBy(
                                 () -> helperImpBase.consumeServiceHTTPByOrchestrationResult(mockOrchestrationResult,
@@ -435,7 +377,7 @@ public class ArrowheadHelperImpBaseTest {
                         }
                 });
 
-                ArrowheadHelperImpBase helperImpBase = buildMockArrowheadHelperImpBase();
+                ArrowheadHelperDefaultImp helperImpBase = buildMockArrowheadHelperImpBase();
 
                 Mockito.when(helperImpBase.arrowheadService.consumeServiceHTTP(HashMap.class, HttpMethod.GET,
                                 "mockaddress", 1234,
@@ -457,7 +399,7 @@ public class ArrowheadHelperImpBaseTest {
         @Test
         public void extractAuthorizationTokenFromOrchestrationResult_Throws_InvalidParameterException_If_Given_OrchestrationResult_Is_Null() {
                 // Arrange
-                ArrowheadHelperImpBase helperImpBase = buildMockArrowheadHelperImpBase();
+                ArrowheadHelperDefaultImp helperImpBase = buildMockArrowheadHelperImpBase();
                 // Act and Assert
                 Assertions.assertThatThrownBy(
                                 () -> helperImpBase.extractAuthorizationTokenFromOrchestrationResult(null))
@@ -468,7 +410,7 @@ public class ArrowheadHelperImpBaseTest {
         @Test
         public void extractAuthorizationTokenFromOrchestrationResult_Returns_Null_OrchestrationResult_Token_Is_Null() {
                 // Arrange
-                ArrowheadHelperImpBase helperImpBase = buildMockArrowheadHelperImpBase();
+                ArrowheadHelperDefaultImp helperImpBase = buildMockArrowheadHelperImpBase();
                 // Act
                 var actualResult = helperImpBase.extractAuthorizationTokenFromOrchestrationResult(
                                 new OrchestrationResultDTO());
@@ -480,7 +422,7 @@ public class ArrowheadHelperImpBaseTest {
         @Test
         public void extractAuthorizationTokenFromOrchestrationResult_Returns_OrchestrationResult_Token_By_InterfaceName_If_It_Is_Not_Null() {
                 // Arrange
-                ArrowheadHelperImpBase helperImpBase = buildMockArrowheadHelperImpBase();
+                ArrowheadHelperDefaultImp helperImpBase = buildMockArrowheadHelperImpBase();
                 String mockInterfaceName = "HTTP-INSECURE-JSON";
                 var mockOrchestrationResult = new OrchestrationResultDTO();
                 mockOrchestrationResult.setAuthorizationTokens(new HashMap<>() {
@@ -499,7 +441,7 @@ public class ArrowheadHelperImpBaseTest {
         @Test
         public void consumeServiceHTTP_Calls_ArrowheadService_consumeServiceHTTP() {
                 // Arrange
-                ArrowheadHelperImpBase helperImpBase = buildMockArrowheadHelperImpBase();
+                ArrowheadHelperDefaultImp helperImpBase = buildMockArrowheadHelperImpBase();
                 Mockito.when(helperImpBase.arrowheadService.consumeServiceHTTP(HashMap.class, HttpMethod.GET, "address",
                                 1234,
                                 "serviceUri", "interfaceName", "token", "payload", "queryParams"))
@@ -518,7 +460,7 @@ public class ArrowheadHelperImpBaseTest {
         @Test
         public void getUriScheme_Returns_Http_If_Ssl_Disabled() {
                 // Arrange
-                ArrowheadHelperImpBase helperImpBase = buildMockArrowheadHelperImpBase();
+                ArrowheadHelperDefaultImp helperImpBase = buildMockArrowheadHelperImpBase();
                 // Act
                 String actualResult = helperImpBase.getUriScheme();
                 // Assert
@@ -528,114 +470,11 @@ public class ArrowheadHelperImpBaseTest {
         @Test
         public void getUriScheme_Returns_Https_If_Ssl_Enabled() {
                 // Arrange
-                ArrowheadHelperImpBase helperImpBase = buildMockArrowheadHelperImpBase();
+                ArrowheadHelperDefaultImp helperImpBase = buildMockArrowheadHelperImpBase();
                 ReflectionTestUtils.setField(helperImpBase, "sslEnabled", true);
                 // Act
                 String actualResult = helperImpBase.getUriScheme();
                 // Assert
                 Assertions.assertThat(actualResult).isEqualTo("https");
-        }
-
-        @Test
-        public void getSystemInformationByName_Throws_InvalidParameterException_If_Given_SystemName_Is_Null() {
-                // Arrange
-                String mockSystemName = null;
-                ArrowheadHelperImpBase helperImpBase = buildMockArrowheadHelperImpBase();
-                // Act and Assert
-                Assertions.assertThatThrownBy(() -> helperImpBase.getSystemInformationByName(mockSystemName))
-                                .isInstanceOf(InvalidParameterException.class)
-                                .hasMessageContaining("systemName is not valid!");
-        }
-
-        @Test
-        public void getSystemInformationByName_Throws_InvalidParameterException_If_Given_SystemName_Is_Empty() {
-                // Arrange
-                String mockSystemName = "";
-                ArrowheadHelperImpBase helperImpBase = buildMockArrowheadHelperImpBase();
-                // Act and Assert
-                Assertions.assertThatThrownBy(() -> helperImpBase.getSystemInformationByName(mockSystemName))
-                                .isInstanceOf(InvalidParameterException.class)
-                                .hasMessageContaining("systemName is not valid!");
-        }
-
-        @Test
-        public void getSystemInformationByName_Throws_InvalidParameterException_If_There_Is_No_System_In_LocalRepository_By_Given_SystemName() {
-                // Arrange
-                ArrowheadHelperImpBase helperImpBase = buildMockArrowheadHelperImpBase();
-                // Act and Assert
-                Assertions.assertThatThrownBy(() -> helperImpBase.getSystemInformationByName("mockSystemName"))
-                                .isInstanceOf(InvalidParameterException.class)
-                                .hasMessageContaining("There is no any system called: mockSystemName");
-        }
-
-        @Test
-        public void getSystemInformationByName_Returns_ArrowheadSystem_From_LocalRepository_By_Given_SystemName() {
-                // Arrange
-                ArrowheadHelperImpBase helperImpBase = buildMockArrowheadHelperImpBase();
-                ArrowheadSystemInformation mockSystemInformation = new ArrowheadSystemInformation("mockSystemName",
-                                "mockSystemNameAddress", 1234,
-                                new ArrayList<ArrowheadServiceInformation>(), new ArrayList<String>());
-                ReflectionTestUtils.setField(helperImpBase, "connectedSystemsLocalRepository",
-                                new ArrayList<ArrowheadSystemInformation>() {
-                                        {
-                                                add(mockSystemInformation);
-                                        }
-                                });
-                // Act
-                ArrowheadSystemInformation actualResult = helperImpBase.getSystemInformationByName("mockSystemName");
-                // Assert
-                Assertions.assertThat(actualResult)
-                                .isEqualTo(mockSystemInformation);
-        }
-
-        @Test
-        public void checkSystemIsExistByName_Throws_InvalidParameterException_If_Given_SystemName_Is_Null() {
-                // Arrange
-                String mockSystemName = null;
-                ArrowheadHelperImpBase helperImpBase = buildMockArrowheadHelperImpBase();
-                // Act and Assert
-                Assertions.assertThatThrownBy(() -> helperImpBase.checkSystemIsExistByName(mockSystemName))
-                                .isInstanceOf(InvalidParameterException.class)
-                                .hasMessageContaining("systemName is not valid!");
-        }
-
-        @Test
-        public void checkSystemIsExistByName_Throws_InvalidParameterException_If_Given_SystemName_Is_Empty() {
-                // Arrange
-                String mockSystemName = "";
-                ArrowheadHelperImpBase helperImpBase = buildMockArrowheadHelperImpBase();
-                // Act and Assert
-                Assertions.assertThatThrownBy(() -> helperImpBase.checkSystemIsExistByName(mockSystemName))
-                                .isInstanceOf(InvalidParameterException.class)
-                                .hasMessageContaining("systemName is not valid!");
-        }
-
-        @Test
-        public void checkSystemIsExistByName_Returns_True_If_There_Is_A_System_In_LocalRepository_By_Given_SystemName() {
-                // Arrange
-                ArrowheadHelperImpBase helperImpBase = buildMockArrowheadHelperImpBase();
-                ArrowheadSystemInformation mockSystemInformation = new ArrowheadSystemInformation("mockSystemName",
-                                "mockSystemNameAddress", 1234,
-                                new ArrayList<ArrowheadServiceInformation>(), new ArrayList<String>());
-                ReflectionTestUtils.setField(helperImpBase, "connectedSystemsLocalRepository",
-                                new ArrayList<ArrowheadSystemInformation>() {
-                                        {
-                                                add(mockSystemInformation);
-                                        }
-                                });
-                // Act
-                boolean actualResult = helperImpBase.checkSystemIsExistByName("mockSystemName");
-                // Assert
-                Assertions.assertThat(actualResult).isTrue();
-        }
-
-        @Test
-        public void checkSystemIsExistByName_Returns_False_If_There_Is_No_Any_System_In_LocalRepository_By_Given_SystemName() {
-                // Arrange
-                ArrowheadHelperImpBase helperImpBase = buildMockArrowheadHelperImpBase();
-                // Act
-                boolean actualResult = helperImpBase.checkSystemIsExistByName("mockSystemName");
-                // Assert
-                Assertions.assertThat(actualResult).isFalse();
         }
 }
