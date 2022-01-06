@@ -147,7 +147,9 @@ public class ArrowheadHelperDefaultImp implements ArrowheadHelper {
                 return;
 
             ServiceRegistryRequestDTO serviceCreationRequest = createServiceRegistrationRequest(systemRequest, service);
-            arrowheadService.forceRegisterServiceToServiceRegistry(serviceCreationRequest);
+            ServiceRegistryResponseDTO serviceCreationResponse = arrowheadService
+                    .forceRegisterServiceToServiceRegistry(serviceCreationRequest);
+            setArrowheadSystemInformationByServiceRegistryResponse(provider, serviceCreationResponse);
         }
     }
 
@@ -184,6 +186,11 @@ public class ArrowheadHelperDefaultImp implements ArrowheadHelper {
         }
 
         return serviceRegistryRequest;
+    }
+
+    private void setArrowheadSystemInformationByServiceRegistryResponse(ArrowheadSystemInformation system,
+            ServiceRegistryResponseDTO response) {
+        system.setId(response.getProvider().getId());
     }
 
     private List<ArrowheadSystemInformation> filterConsumersOfSystemList(
@@ -226,6 +233,24 @@ public class ArrowheadHelperDefaultImp implements ArrowheadHelper {
         return responseFromServiceRegistry.getBody();
     }
 
+    private void sendSystemRegistrationRequest(ArrowheadSystemInformation system) {
+        try {
+            SystemRequestDTO request = createSystemRequestBySystemInformation(system);
+            ResponseEntity<SystemResponseDTO> response = httpService.sendRequest(
+                    Utilities.createURI(this.getUriScheme(),
+                            serviceRegistryAddress, serviceRegistryPort,
+                            ArrowheadConstants.CONSUMER_SYSTEM_REGISTRATION_URI),
+                    HttpMethod.POST, SystemResponseDTO.class, request);
+            if (response == null || response.getBody() == null
+                    || response.getStatusCodeValue() != HttpStatus.CREATED.value())
+                throw new ArrowheadServiceRegistryException(
+                        "Sending system registration request unsuccessful for: " + system.getSystemName());
+            system.setId(response.getBody().getId());
+        } catch (eu.arrowhead.common.exception.InvalidParameterException ex) {
+            logger.warn(String.format("Consumer: %s is already exists !", system.getSystemName()));
+        }
+    }
+
     private List<ArrowheadServiceInformation> filterConsumedServicesFomServiceRegistryList(
             List<String> consumedServiceNames, ServiceRegistryListResponseDTO serviceRegistryListResponseDTO) {
         List<ArrowheadServiceInformation> consumedServices = new ArrayList<>();
@@ -246,22 +271,6 @@ public class ArrowheadHelperDefaultImp implements ArrowheadHelper {
                 serviceRegistryInfo.getServiceDefinition().getServiceDefinition(),
                 serviceRegistryInfo.getServiceUri(),
                 serviceRegistryInfo.getMetadata());
-    }
-
-    private void sendSystemRegistrationRequest(ArrowheadSystemInformation system) {
-        try {
-            SystemRequestDTO request = createSystemRequestBySystemInformation(system);
-            ResponseEntity<SystemResponseDTO> response = httpService.sendRequest(
-                    Utilities.createURI(this.getUriScheme(),
-                            serviceRegistryAddress, serviceRegistryPort,
-                            ArrowheadConstants.CONSUMER_SYSTEM_REGISTRATION_URI),
-                    HttpMethod.POST, SystemResponseDTO.class, request);
-            if (response == null || response.getStatusCodeValue() != HttpStatus.CREATED.value())
-                throw new ArrowheadServiceRegistryException(
-                        "Sending system registration request unsuccessful for: " + system.getSystemName());
-        } catch (eu.arrowhead.common.exception.InvalidParameterException ex) {
-            logger.warn(String.format("Consumer: %s is already exists !", system.getSystemName()));
-        }
     }
 
     private AuthorizationIntraCloudListResponseDTO sendConsumedServiceRegistrationRequest(

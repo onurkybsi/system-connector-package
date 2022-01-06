@@ -33,8 +33,6 @@ import org.springframework.context.annotation.PropertySource;
 public class SystemConnectorConfiguration {
     @Value("${maas_client_type:defaultImp}")
     private String implementationTypeOfMAASClient;
-    @Value("${system_definition_list_resource_path}")
-    private String systemDefinitionListResourcePath;
     @Value("${custom_arrowhead_imp_bean_name:}")
     private String customArrowheadImpBeanName;
 
