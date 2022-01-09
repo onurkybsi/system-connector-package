@@ -93,4 +93,11 @@ public interface ArrowheadHelper {
          * @return Interface name
          */
         String getInterfaceName();
+
+        /**
+         * Receives HTTP prefix by interface name
+         * 
+         * @return
+         */
+        String getHttpPrefixByInterfaceName();
 }

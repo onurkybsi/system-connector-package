@@ -77,7 +77,7 @@ public class RepositoryManagerClientDefaultImp implements RepositoryManagerClien
             String dataName,
             MultipartFile file, String token)
             throws IOException {
-        String uriOfService = String.format("%s%s:%s%s", getHttpPrefixByInterfaceName(),
+        String uriOfService = String.format("%s%s:%s%s", arrowheadHelper.getHttpPrefixByInterfaceName(),
                 orchestrationResult.getProvider().getAddress(),
                 orchestrationResult.getProvider().getPort(), orchestrationResult.getServiceUri());
         return httpUtilityService.sendHttpPostRequestWithMultipartFormData(uriOfService, new HashMap<>() {
@@ -95,12 +95,6 @@ public class RepositoryManagerClientDefaultImp implements RepositoryManagerClien
                                 FilenameUtils.getExtension(file.getName())));
                     }
                 }, HashMap.class);
-    }
-
-    private String getHttpPrefixByInterfaceName() {
-        return !arrowheadHelper.getInterfaceName().contains("INSECURE")
-                ? "https://"
-                : "http://";
     }
 
     @Override
@@ -161,7 +155,7 @@ public class RepositoryManagerClientDefaultImp implements RepositoryManagerClien
         final OrchestrationResultDTO orchestrationResult = orchestrationResponse.getResponse().get(0);
         final String token = arrowheadHelper
                 .extractAuthorizationTokenFromOrchestrationResult(orchestrationResult);
-        String uriOfService = String.format("%s%s:%s%s/%s", getHttpPrefixByInterfaceName(),
+        String uriOfService = String.format("%s%s:%s%s/%s", arrowheadHelper.getHttpPrefixByInterfaceName(),
                 orchestrationResult.getProvider().getAddress(),
                 orchestrationResult.getProvider().getPort(), orchestrationResult.getServiceUri(), id);
 

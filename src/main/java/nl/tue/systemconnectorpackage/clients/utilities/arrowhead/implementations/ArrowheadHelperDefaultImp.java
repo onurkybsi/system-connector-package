@@ -371,4 +371,10 @@ public class ArrowheadHelperDefaultImp implements ArrowheadHelper {
     public String getUriScheme() {
         return sslEnabled ? "https" : "http";
     }
+
+    public String getHttpPrefixByInterfaceName() {
+        return !getInterfaceName().contains("INSECURE")
+                ? "https://"
+                : "http://";
+    }
 }
