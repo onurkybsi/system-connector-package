@@ -6,6 +6,8 @@ import eu.arrowhead.common.http.HttpService;
 import nl.tue.systemconnectorpackage.clients.maas.MAASClient;
 import nl.tue.systemconnectorpackage.clients.maas.implementations.*;
 import nl.tue.systemconnectorpackage.clients.utilities.arrowhead.implementations.ArrowheadHelperDefaultImp;
+import nl.tue.systemconnectorpackage.clients.xama.XAMAClient;
+import nl.tue.systemconnectorpackage.clients.xama.implementations.XAMAClientDefaultImp;
 import nl.tue.systemconnectorpackage.common.FileUtilityService;
 import nl.tue.systemconnectorpackage.common.HttpUtilityService;
 import nl.tue.systemconnectorpackage.common.StringUtilities;
@@ -70,5 +72,11 @@ public class SystemConnectorConfiguration {
     @Bean
     public FileUtilityService fileUtilityService() {
         return new FileUtilityServiceDefaultImp();
+    }
+
+    @Bean
+    public XAMAClient xamaClient(@Autowired ArrowheadHelper arrowheadHelper,
+            @Autowired HttpUtilityService httpUtilityService) {
+        return new XAMAClientDefaultImp(arrowheadHelper, httpUtilityService);
     }
 }
