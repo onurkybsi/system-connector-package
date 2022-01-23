@@ -76,6 +76,7 @@ public class ArrowheadHelperDefaultImp implements ArrowheadHelper {
         this.fileUtilityService = fileUtilityService;
         this.httpService = httpService;
         this.logger = LogManager.getLogger(ArrowheadHelperDefaultImp.class);
+        checkCoreSystemAvailabilities();
     }
 
     private void validateConstructionParameters(final ArrowheadService arrowheadService,
@@ -93,8 +94,6 @@ public class ArrowheadHelperDefaultImp implements ArrowheadHelper {
             throws UnavailableServerException, IOException, JsonSyntaxException {
         if (!StringUtilities.isValid(systemDefinitionListResourcePath))
             throw new InvalidParameterException("systemDefinitionListResourcePath is not valid!");
-
-        checkCoreSystemAvailabilities();
 
         List<ArrowheadSystemInformation> systems = extractSystemInformationListFromSystemDefinitionFile(
                 systemDefinitionListResourcePath);
