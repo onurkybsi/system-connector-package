@@ -14,7 +14,7 @@ A Java library that provides client modules to consume services from _MAAS_, _SA
 </dependency>
 ```
 
-2. _system-connector-package_ needs some configuration values and it reads the from `application.properties`. These values must be satisfied. ([Example application.properties](https://github.com/onurkybsi/system-connector-package/blob/master/example-config-files/application.properties))
+2. _system-connector-package_ needs some configuration values and it reads the from `application.properties`. These values must be satisfied. ([Example application.properties](https://github.com/onurkybsi/system-connector-package/blob/master/doc/example-config-files/application.properties))
 
 3. _system-connector-package_ uses _Spring Boot_ to configure its dependicies so that _Spring Boot_ must be initialized and `"nl.tue"` package should be scanned by _Spring_. As an example:
 ``` java
