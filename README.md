@@ -51,3 +51,4 @@ public class ExampleClientModule {
 * [_Clients_ Package](https://github.com/onurkybsi/system-connector-package/blob/master/doc/ClientsPackage.md)
 * [_Common_ Package](https://github.com/onurkybsi/system-connector-package/blob/master/doc/CommonPackage.md)
 * [_Configuration_ Package](https://github.com/onurkybsi/system-connector-package/blob/master/doc/ConfigurationPackage.md)
+* [How to do?](https://github.com/onurkybsi/system-connector-package/blob/master/doc/HowToDo.md)
