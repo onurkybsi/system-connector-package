@@ -47,7 +47,7 @@ public class ExampleClientModule {
 
 ## Documentation
 
-1. [Packaging structure](https://github.com/onurkybsi/system-connector-package/blob/master/doc/PackingStructure.md)
-2. [_Clients_ Package](https://github.com/onurkybsi/system-connector-package/blob/master/doc/ClientsPackage.md)
-3. [_Common_ Package](https://github.com/onurkybsi/system-connector-package/blob/master/doc/CommonPackage.md)
-4. [_Configuration_ Package](https://github.com/onurkybsi/system-connector-package/blob/master/doc/ConfigurationPackage.md)
+* [Packaging structure](https://github.com/onurkybsi/system-connector-package/blob/master/doc/PackingStructure.md)
+* [_Clients_ Package](https://github.com/onurkybsi/system-connector-package/blob/master/doc/ClientsPackage.md)
+* [_Common_ Package](https://github.com/onurkybsi/system-connector-package/blob/master/doc/CommonPackage.md)
+* [_Configuration_ Package](https://github.com/onurkybsi/system-connector-package/blob/master/doc/ConfigurationPackage.md)
