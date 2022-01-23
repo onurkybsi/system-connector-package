@@ -35,6 +35,8 @@ import org.springframework.context.annotation.PropertySource;
 public class SystemConnectorConfiguration {
     @Value("${maas_client_type:defaultImp}")
     private String implementationTypeOfMAASClient;
+    @Value("${xama_client_type:defaultImp}")
+    private String implementationTypeOfXAMAClient;
     @Value("${custom_arrowhead_imp_bean_name:}")
     private String customArrowheadImpBeanName;
 
@@ -77,6 +79,9 @@ public class SystemConnectorConfiguration {
     @Bean
     public XAMAClient xamaClient(@Autowired ArrowheadHelper arrowheadHelper,
             @Autowired HttpUtilityService httpUtilityService) {
-        return new XAMAClientDefaultImp(arrowheadHelper, httpUtilityService);
+        if (implementationTypeOfMAASClient.equals("defaultImp")) {
+            return new XAMAClientDefaultImp(arrowheadHelper, httpUtilityService);
+        }
+        throw new UnsupportedOperationException("There is no any XAMAClient implementation by xama_client_type!");
     }
 }
