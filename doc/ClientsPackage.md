@@ -53,3 +53,9 @@ _Version 1.0.0_ has only _Arrowhead framework_ implementation for inter-system c
                 Model.class, null, queryParams);
     }
 ```
+
+### ArrowheadHelper services
+
+* `void registerSystemsToArrowhead(String systemDefinitionListResourcePath)
+                        throws UnavailableServerException, IOException, JsonSyntaxException`:
+    * Version 1.0.0 supports only Arrowhead framework for inter-system communication. For this reason, _system-connector-package_ users must be registered in _Arrowhead_. Although this registration can be done manually by users, _system-connector-package_ provides the `registerSystemsToArrowhead` service for this registration. [As in the example](https://github.com/onurkybsi/system-connector-package/blob/master/doc/example-config-files/example-system-definition.json), all the details of the system to be recorded must be specified in a JSON. Then the path of this JSON file is given as a parameter to the `registerSystemsToArrowhead` service and the service completes all necessary registration.
