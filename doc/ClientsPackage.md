@@ -14,14 +14,14 @@ The most important consideration when developing clients was that the client was
 
 #### Package Structure
 * **_xClient_**: The parent package that contains the client of system X and other modules that the client module uses. 
-    * **_xClientInterface.java_**: Java interface containing consumable services of the X system.
+    * **_XClientInterface.java_**: Java interface containing consumable services of the X system.
     * **_models_**: A subpackage containing models representing the input and output data of the services of the X system.
-        * xServiceResponse.java
-        * xServiceRequest.java
+        * XServiceResponse.java
+        * XServiceRequest.java
     * **_implementations_**: Subpackage with various _xClientInterface_ implementations according to communication types.
-        * xClientArrowheadImp.java
-        * xClientKafkaImp.java
-        * xClientRESTImp.java
+        * XClientArrowheadImp.java
+        * XClientKafkaImp.java
+        * XClientRESTImp.java
 
 ### Arrowhead Service Consuming Implementation
 
