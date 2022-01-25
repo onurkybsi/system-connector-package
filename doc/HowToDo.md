@@ -37,6 +37,7 @@ public interface NewClient {
     AnyServiceResponse anyService(AnyServiceRequest request);
 }
 ```
+As an concrete example; [ModelCrawlerClient.java](https://github.com/onurkybsi/system-connector-package/blob/master/src/main/java/nl/tue/systemconnectorpackage/clients/maas/ModelCrawlerClient.java)
 
 `AnyServiceRequest.java`:
 
@@ -52,6 +53,7 @@ public class AnyServiceRequest {
     }
 }
 ```
+As an concrete example; [CrawlerOptionsDTO.java](https://github.com/onurkybsi/system-connector-package/blob/master/src/main/java/nl/tue/systemconnectorpackage/clients/maas/models/CrawlerOptionsDTO.java)
 
 `AnyServiceResponse.java`:
 
@@ -63,6 +65,7 @@ public class AnyServiceResponse {
     public boolean isSuccessful;
 }
 ```
+As an concrete example; `void`
 
 `NewClientDefaultImp.java` :
 
@@ -96,6 +99,7 @@ public class NewClientDefaultImp implements NewClient {
     }
 }
 ```
+As an concrete example; [ModelCrawlerClientDefaultImp.java](https://github.com/onurkybsi/system-connector-package/blob/master/src/main/java/nl/tue/systemconnectorpackage/clients/maas/implementations/ModelCrawlerClientDefaultImp.java)
 
 2. The created client should add the implementation to the Spring IoC container via `SystemConnectorConfiguration` as follows;
 
