@@ -1,6 +1,6 @@
 ## Clients Package
 
-It includes clients that provide services so that the services of the underlying system can be consumed. Clients were developed by developing subpackages for each of the systems that can consume the services with this package.
+It includes clients that provide services so that the services of the underlying system can be consumed. Clients were developed by developing subpackages for each of the systems which will be consumed.
 
 Subpackages:
 * _maas_: It contains various modules related to a client that includes proxy services to the services of the MAAS system. [_more info..._](https://github.com/onurkybsi/system-connector-package/blob/master/src/main/java/nl/tue/systemconnectorpackage/clients/maas)
@@ -14,8 +14,8 @@ The most important consideration when developing clients was that the client was
 
 #### Package Structure
 * **_xClient_**: The parent package that contains the client of system X and other modules that the client module uses. 
-    * **_XClientInterface.java_**: Java interface containing consumable services of the X system.
-    * **_models_**: A subpackage containing models representing the input and output data of the services of the X system.
+    * **_XClientInterface.java_**: Java interface containing consumable services of system X.
+    * **_models_**: A subpackage containing models representing the input and output data of the services of system X.
         * XServiceResponse.java
         * XServiceRequest.java
     * **_implementations_**: Subpackage with various _xClientInterface_ implementations according to communication types.
@@ -54,7 +54,7 @@ _Version 1.0.0_ has only _Arrowhead framework_ implementation for inter-system c
     }
 ```
 
-### ArrowheadHelper services
+### ArrowheadHelper.java services
 
 * `void registerSystemsToArrowhead(String systemDefinitionListResourcePath)
                         throws UnavailableServerException, IOException, JsonSyntaxException`:
