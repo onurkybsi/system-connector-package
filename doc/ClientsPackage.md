@@ -13,15 +13,18 @@ Subpackages:
 The most important consideration when developing clients was that the client was independent of the underlying communication type. In _version 1.0.0_, _system-connector-package_ provides inter-system communication using the [Arrowhead framework](https://github.com/eclipse-arrowhead/core-java-spring). However, considering that this situation may be changed in later versions, an abstraction has been desired to be provided between the users of _system-connector-package_ and the clients.
 
 #### Package Structure
-* **_xClient_**: The parent package that contains the client of system X and other modules that the client module uses. 
-    * **_XClientInterface.java_**: Java interface containing consumable services of system X.
-    * **_models_**: A subpackage containing models representing the input and output data of the services of system X.
-        * XServiceResponse.java
-        * XServiceRequest.java
-    * **_implementations_**: Subpackage with various _xClientInterface_ implementations according to communication types.
-        * XClientArrowheadImp.java
-        * XClientKafkaImp.java
-        * XClientRESTImp.java
+```
++-- clients
+|   +-- xClient
+|       +-- XClientInterface.java           (The parent package that contains the client of system X and other modules that the client module uses)
+|       +-- models                          (A subpackage containing models representing the input and output data of the services of system X)
+|           +-- XServiceResponse.java
+|           +-- XServiceRequest.java
+|       +-- implementations                 (Subpackage with various _xClientInterface_ implementations according to communication types)
+|           +-- XClientArrowheadImp.java
+|           +-- XClientKafkaImp.java
+|           +-- XClientRESTImp.java
+```
 
 ### Arrowhead Service Consuming Implementation
 
