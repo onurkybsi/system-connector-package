@@ -8,7 +8,7 @@ A Java library that provides client modules to consume services from _MAAS_, _SA
 
 ## Installation
 
-1. Use _Maven_ to build _cluster-operator_
+1. Use _Maven_ to build _system-connector-package_
 
 ```bash
 mvn install
