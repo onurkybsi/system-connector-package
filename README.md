@@ -38,7 +38,7 @@ public class Initializer {
 }
 ````
 
-5. [**OPTIONAL**] _Version 1.0.0_ uses Arrowhead framework to connect systems so that your system must be registered in _Arrowhead framework_. You can handle this job by using _Arrowhead's API_ or inserting necessary entries to the _Arrowhead_ database. However, you can use [ArrowheadHelper](https://github.com/onurkybsi/system-connector-package/blob/master/src/main/java/nl/tue/systemconnectorpackage/clients/utilities/arrowhead/ArrowheadHelper.java) which is a module provides various helper services to handle Arrowhead stuff. You can register your system at the initialization stage of your system as below:
+5. [**OPTIONAL**] _Version 1.0.0_ uses Arrowhead framework to connect systems so that your system must be registered in _Arrowhead framework_. You can handle this job by using _Arrowhead's API_ or inserting necessary entries to the _Arrowhead_ database. However, you can use [ArrowheadHelper](https://github.com/onurkybsi/system-connector-package/blob/master/src/main/java/nl/tue/systemconnectorpackage/clients/utilities/arrowhead/ArrowheadHelper.java) which is a module that provides various helper services to handle Arrowhead. You can register your system at the initialization stage of your system as below:
 ``` java
 /**
  * Handles initialization stuff
